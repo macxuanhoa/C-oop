@@ -1,0 +1,35 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "System Admin / Manager" as Admin
+
+rectangle "Education Centre Management System" {
+  usecase "1. Add Record" as UC1
+  usecase "Add Student" as UC1_1
+  usecase "Add Teacher" as UC1_2
+  usecase "Add Admin Staff" as UC1_3
+  
+  usecase "2. View All Records" as UC2
+  usecase "3. View Records By Role" as UC3
+  usecase "4. Edit Record" as UC4
+  usecase "5. Delete Record" as UC5
+  
+  usecase "Find/Validate by Email" as UCHelper
+}
+
+Admin --> UC1
+Admin --> UC2
+Admin --> UC3
+Admin --> UC4
+Admin --> UC5
+
+UC1_1 -up-|> UC1
+UC1_2 -up-|> UC1
+UC1_3 -up-|> UC1
+
+UC1 ..> UCHelper : <<include>>
+UC4 ..> UCHelper : <<include>>
+UC5 ..> UCHelper : <<include>>
+
+@enduml
