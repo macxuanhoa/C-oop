@@ -1,6 +1,6 @@
 CREATE DATABASE IF NOT EXISTS education_centre
   CHARACTER SET utf8mb4
-  COLLATE utf8mb4_0900_ai_ci;
+  COLLATE utf8mb4_unicode_ci;
 
 USE education_centre;
 
@@ -25,4 +25,4 @@ CREATE TABLE IF NOT EXISTS People (
 
   PRIMARY KEY (PersonId),
   UNIQUE KEY UQ_People_Email (Email)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

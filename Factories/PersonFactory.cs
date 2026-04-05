@@ -1,24 +1,33 @@
-using EducationCentreSystem.Models;
-
-namespace EducationCentreSystem.Factories;
-
-/// <summary>
-/// Factory responsible for creating the correct derived Person type based on role.
-/// This centralizes object creation and supports polymorphism by returning the base type.
-/// </summary>
-public static class PersonFactory
+namespace EducationCentreSystem.Factories
 {
-    /// <summary>
-    /// Creates a Student, Teacher, or Admin instance depending on the given role.
-    /// </summary>
-    public static Person Create(PersonRole role)
+    using EducationCentreSystem.Models;
+    using System;
+
+    // This class is used to create Student, Teacher or Admin objects
+    // based on the provided Role.
+    public static class PersonFactory
     {
-        return role switch
+        public static Person Create(PersonRole role)
         {
-            PersonRole.Student => new Student(),
-            PersonRole.Teacher => new Teacher(),
-            PersonRole.Admin => new Admin(),
-            _ => throw new ArgumentOutOfRangeException(nameof(role), role, null)
-        };
+            // Use traditional switch case to control object creation manually
+            switch (role)
+            {
+                case PersonRole.Student:
+                    Student newStudent = new Student();
+                    return newStudent;
+
+                case PersonRole.Teacher:
+                    Teacher newTeacher = new Teacher();
+                    return newTeacher;
+
+                case PersonRole.Admin:
+                    Admin newAdmin = new Admin();
+                    return newAdmin;
+
+                default:
+                    // Throw an exception if the role is not recognized
+                    throw new Exception("Could not find a matching Person type for role: " + role);
+            }
+        }
     }
 }

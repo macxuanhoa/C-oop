@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using EducationCentreSystem.Controllers;
 using EducationCentreSystem.Models;
 using EducationCentreSystem.Common;
+using EducationCentreSystem.Repositories;
 
 namespace EducationCentreSystem.Views.WinForms
 {
@@ -45,6 +46,11 @@ namespace EducationCentreSystem.Views.WinForms
         /// <summary>
         /// Initializes the form and loads initial data into the grid.
         /// </summary>
+        public Form1()
+            : this(new PersonController(new InMemoryPersonRepository()))
+        {
+        }
+
         public Form1(PersonController controller)
         {
             _controller = controller;

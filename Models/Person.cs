@@ -1,78 +1,94 @@
 using EducationCentreSystem.Common;
 using EducationCentreSystem.Controllers;
 
-namespace EducationCentreSystem.Models;
-
-/// <summary>
-/// Abstract base type for all user groups in the education centre.
-/// Marked as abstract to prevent creating a generic "Person" record; only specific roles
-/// (Student/Teacher/Admin) should be instantiated.
-/// </summary>
-public abstract class Person
+namespace EducationCentreSystem.Models
 {
     /// <summary>
-    /// Unique identifier for the record (assigned by the repository).
+    /// Represents the base entity for all individuals within the education centre.
+    /// This class is abstract to enforce that only specific roles (Student, Teacher, Admin) can be instantiated.
+    /// It demonstrates key OOP principles: Abstraction, Encapsulation, and Polymorphism.
     /// </summary>
-    public int Id { get; set; }
-
-    /// <summary>
-    /// Full name of the person.
-    /// </summary>
-    public string Name { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Telephone number stored as a normalized string.
-    /// </summary>
-    public string Telephone { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Email address stored as a normalized string.
-    /// </summary>
-    public string Email { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Role is read-only to keep the record's type consistent after creation.
-    /// </summary>
-    public PersonRole Role { get; }
-
-    /// <summary>
-    /// Protected constructor ensures only derived classes can set the Role.
-    /// </summary>
-    protected Person(PersonRole role)
+    public abstract class Person
     {
-        Role = role;
-    }
+        /// <summary>
+        /// Gets or sets the unique identifier for the record.
+        /// </summary>
+        public int Id { get; set; }
 
-    /// <summary>
-    /// Returns a formatted string for displaying the record.
-    /// Declared virtual so derived classes can override and append role-specific fields (polymorphism).
-    /// </summary>
-    public virtual string GetDetails()
-    {
-        return $"ID: {Id} | Role: {Role} | Name: {Name} | Telephone: {Telephone} | Email: {Email}";
-    }
+        /// <summary>
+        /// Gets or sets the full name of the person.
+        /// </summary>
+        public string Name { get; set; } = "";
 
-    /// <summary>
-    /// Populates common fields from a creation request.
-    /// Derived classes must override this to populate their own specific fields.
-    /// </summary>
-    public virtual void MapFromCreateRequest(CreatePersonRequest request)
-    {
-        Name = request.Name.Trim();
-        Email = ValidationHelper.NormalizeEmail(request.Email)!;
-        Telephone = ValidationHelper.NormalizeTelephone(request.Telephone)!;
-    }
+        /// <summary>
+        /// Gets or sets the telephone contact number.
+        /// </summary>
+        public string Telephone { get; set; } = "";
 
-    /// <summary>
-    /// Updates common fields from an update request if they are provided.
-    /// Derived classes must override this to update their own specific fields.
-    /// </summary>
-    public virtual void MapFromUpdateRequest(UpdatePersonRequest request)
-    {
-        if (!string.IsNullOrWhiteSpace(request.Name)) 
-            Name = request.Name.Trim();
+        /// <summary>
+        /// Gets or sets the primary email address.
+        /// </summary>
+        public string Email { get; set; } = "";
 
-        if (!string.IsNullOrWhiteSpace(request.Telephone))
-            Telephone = ValidationHelper.NormalizeTelephone(request.Telephone)!;
+        /// <summary>
+        /// Gets the assigned role for this person. The role is read-only after creation to maintain data integrity.
+        /// </summary>
+        public PersonRole Role { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the Person class with a specific role.
+        /// Protected constructor to be called by derived classes only.
+        /// </summary>
+        /// <param name="role">The role assigned to the person.</param>
+        protected Person(PersonRole role)
+        {
+            this.Role = role;
+        }
+
+        /// <summary>
+        /// Generates a formatted string representing the basic details of the person.
+        /// This method is virtual to allow role-specific data to be appended by subclasses (Polymorphism).
+        /// </summary>
+        /// <returns>A string containing the common person details.</returns>
+        public virtual string GetDetails()
+        {
+            return "ID: " + Id + " | Role: " + Role + " | Name: " + Name + " | Telephone: " + Telephone + " | Email: " + Email;
+        }
+
+        /// <summary>
+        /// Populates common fields from a creation request object.
+        /// This method ensures that input data is properly trimmed and normalized.
+        /// </summary>
+        /// <param name="request">The data transfer object containing creation details.</param>
+        public virtual void MapFromCreateRequest(CreatePersonRequest request)
+        {
+            if (request != null)
+            {
+                this.Name = request.Name.Trim();
+                this.Email = ValidationHelper.NormalizeEmail(request.Email)!;
+                this.Telephone = ValidationHelper.NormalizeTelephone(request.Telephone)!;
+            }
+        }
+
+        /// <summary>
+        /// Updates existing common fields from an update request object.
+        /// Only non-blank values are applied to prevent overwriting existing data with empty strings.
+        /// </summary>
+        /// <param name="request">The data transfer object containing update details.</param>
+        public virtual void MapFromUpdateRequest(UpdatePersonRequest request)
+        {
+            if (request != null)
+            {
+                if (string.IsNullOrWhiteSpace(request.Name) == false)
+                {
+                    this.Name = request.Name.Trim();
+                }
+
+                if (string.IsNullOrWhiteSpace(request.Telephone) == false)
+                {
+                    this.Telephone = ValidationHelper.NormalizeTelephone(request.Telephone)!;
+                }
+            }
+        }
     }
 }

@@ -2,129 +2,176 @@ using EducationCentreSystem.Common;
 using EducationCentreSystem.Factories;
 using EducationCentreSystem.Models;
 using EducationCentreSystem.Repositories;
+using System;
+using System.Collections.Generic;
 
-namespace EducationCentreSystem.Controllers;
-
-/// <summary>
-/// Coordinates user actions (add/view/edit/delete) and enforces basic business rules.
-/// The controller depends on the repository abstraction (IPersonRepository) so that storage can be swapped
-/// (e.g., in-memory vs MySQL) without changing the UI or controller logic.
-/// </summary>
-/// <remarks>
-/// Responsibilities:
-/// - Validate incoming requests (delegated to request models)
-/// - Normalize common input (email/telephone/job type)
-/// - Enforce unique email constraint
-/// - Create the correct derived Person type using the factory
-/// - Delegate persistence to the repository
-///
-/// This separation keeps the UI focused on input/output while the controller handles application rules.
-/// </remarks>
-public sealed class PersonController
+namespace EducationCentreSystem.Controllers
 {
-    private readonly IPersonRepository _repo;
-
     /// <summary>
-    /// Creates a controller that operates on the provided repository.
+    /// Acts as the intermediary between the user interface and the data persistence layer.
+    /// This controller orchestrates business logic, input validation, and object mapping.
+    /// It demonstrates the use of Dependency Injection via the IPersonRepository interface.
     /// </summary>
-    public PersonController(IPersonRepository repo)
+    public sealed class PersonController
     {
-        _repo = repo;
-    }
+        /// <summary>
+        /// The repository used for persisting and retrieving person records.
+        /// </summary>
+        private readonly IPersonRepository repository;
 
-    /// <summary>
-    /// Returns all stored people (students, teachers, and admins).
-    /// </summary>
-    public IReadOnlyList<Person> ViewAll()
-    {
-        return _repo.GetAll();
-    }
-
-    /// <summary>
-    /// Returns people filtered by a specific role.
-    /// </summary>
-    public IReadOnlyList<Person> ViewByRole(PersonRole role)
-    {
-        return _repo.GetByRole(role);
-    }
-
-    /// <summary>
-    /// Finds a person by email. Email is normalized before lookup.
-    /// Returns null when the email is blank/invalid or no record exists.
-    /// </summary>
-    public Person? FindByEmail(string email)
-    {
-        var normalized = ValidationHelper.NormalizeEmail(email);
-        if (normalized == null) return null;
-        return _repo.FindByEmail(normalized);
-    }
-
-    /// <summary>
-    /// Adds a new record after validating input and enforcing unique email.
-    /// Demonstrates polymorphism: a Person variable can reference Student/Teacher/Admin created by the factory,
-    /// while role-specific fields are populated via type checks.
-    /// </summary>
-    public OperationResult<Person> Add(CreatePersonRequest request)
-    {
-        var validationErrors = request.Validate();
-        if (validationErrors.Count > 0)
+        /// <summary>
+        /// Initializes a new instance of the PersonController class with a specific repository implementation.
+        /// </summary>
+        /// <param name="repo">The repository to be used by this controller.</param>
+        public PersonController(IPersonRepository repo)
         {
-            return OperationResult<Person>.Fail(string.Join(" ", validationErrors.Values));
+            this.repository = repo ?? throw new ArgumentNullException(nameof(repo));
         }
 
-        // Email is guaranteed to be valid and not null by request.Validate()
-        var email = ValidationHelper.NormalizeEmail(request.Email)!;
-
-        if (_repo.EmailExists(email)) return OperationResult<Person>.Fail("Email already exists.");
-
-        // Factory method returns the correct derived type based on role.
-        var person = PersonFactory.Create(request.Role);
-        
-        // Use polymorphism to populate the object based on its actual type.
-        person.MapFromCreateRequest(request);
-
-        // Repository implementation decides how persistence happens (in-memory list vs database table).
-        _repo.Add(person);
-        return OperationResult<Person>.Ok(person);
-    }
-
-    /// <summary>
-    /// Updates an existing record identified by TargetEmail.
-    /// Only fields provided in the request are updated; blank values keep the current data.
-    /// </summary>
-    public OperationResult Edit(UpdatePersonRequest request)
-    {
-        var validationErrors = request.Validate();
-        if (validationErrors.Count > 0)
+        /// <summary>
+        /// Fetches all people currently stored in the system.
+        /// </summary>
+        /// <returns>A read-only collection of all Person entities.</returns>
+        public IReadOnlyList<Person> ViewAll()
         {
-            return OperationResult.Fail(string.Join(" ", validationErrors.Values));
+            return repository.GetAll();
         }
 
-        // TargetEmail is guaranteed to be valid by request.Validate()
-        var targetEmail = ValidationHelper.NormalizeEmail(request.TargetEmail)!;
+        /// <summary>
+        /// Filters people based on their specific role.
+        /// </summary>
+        /// <param name="role">The role to filter by.</param>
+        /// <returns>A read-only collection of people with the specified role.</returns>
+        public IReadOnlyList<Person> ViewByRole(PersonRole role)
+        {
+            return repository.GetByRole(role);
+        }
 
-        var person = _repo.FindByEmail(targetEmail);
-        if (person == null) return OperationResult.Fail("Record not found.");
+        /// <summary>
+        /// Searches for a person by their email address.
+        /// </summary>
+        /// <param name="email">The email address to search for.</param>
+        /// <returns>The Person if found; otherwise, null.</returns>
+        public Person? FindByEmail(string email)
+        {
+            string? normalizedEmail = ValidationHelper.NormalizeEmail(email);
+            if (string.IsNullOrEmpty(normalizedEmail) == true)
+            {
+                return null;
+            }
+            return repository.FindByEmail(normalizedEmail);
+        }
 
-        // Use polymorphism to update the object based on its actual type.
-        person.MapFromUpdateRequest(request);
+        /// <summary>
+        /// Validates and adds a new person record to the system.
+        /// This method demonstrates the use of a Factory pattern for object creation.
+        /// </summary>
+        /// <param name="request">The data containing the new person's details.</param>
+        /// <returns>An OperationResult containing the created Person or error details.</returns>
+        public OperationResult<Person> Add(CreatePersonRequest request)
+        {
+            if (request == null)
+            {
+                return OperationResult<Person>.Fail("Request data cannot be null.");
+            }
 
-        _repo.Update(person);
-        return OperationResult.Ok();
-    }
+            // Step 1: Validate input data using the request's validation logic
+            Dictionary<string, string> validationErrors = request.Validate();
+            if (validationErrors.Count > 0)
+            {
+                string combinedErrorMessage = "";
+                foreach (var error in validationErrors)
+                {
+                    combinedErrorMessage = combinedErrorMessage + error.Value + " ";
+                }
+                return OperationResult<Person>.Fail(combinedErrorMessage.Trim());
+            }
 
-    /// <summary>
-    /// Deletes a record by email. Returns failure when the email is missing/invalid or the record does not exist.
-    /// </summary>
-    public OperationResult Delete(string email)
-    {
-        var normalized = ValidationHelper.NormalizeEmail(email);
-        if (normalized == null) return OperationResult.Fail("Email is required.");
-        if (!ValidationHelper.IsValidEmail(normalized)) return OperationResult.Fail("Email format is invalid.");
+            // Step 2: Ensure the email is unique within the system
+            string newEmail = ValidationHelper.NormalizeEmail(request.Email)!;
+            if (repository.EmailExists(newEmail) == true)
+            {
+                return OperationResult<Person>.Fail("Validation Error: A record with this email address already exists.");
+            }
 
-        var existing = _repo.FindByEmail(normalized);
-        if (existing == null) return OperationResult.Fail("Record not found.");
-        _repo.DeleteByEmail(normalized);
-        return OperationResult.Ok();
+            // Step 3: Instantiate the correct concrete type using the PersonFactory
+            Person newPersonInstance = PersonFactory.Create(request.Role);
+            
+            // Step 4: Map the request data onto the domain object
+            newPersonInstance.MapFromCreateRequest(request);
+
+            // Step 5: Persist the new record via the repository
+            repository.Add(newPersonInstance);
+            
+            return OperationResult<Person>.Ok(newPersonInstance);
+        }
+
+        /// <summary>
+        /// Validates and updates an existing person record identified by their email.
+        /// </summary>
+        /// <param name="request">The data containing update details.</param>
+        /// <returns>An OperationResult indicating success or containing error messages.</returns>
+        public OperationResult Edit(UpdatePersonRequest request)
+        {
+            if (request == null)
+            {
+                return OperationResult.Fail("Update request data cannot be null.");
+            }
+
+            Dictionary<string, string> errors = request.Validate();
+            if (errors.Count > 0)
+            {
+                string errorSummary = "";
+                foreach (string error in errors.Values)
+                {
+                    errorSummary = errorSummary + error + " ";
+                }
+                return OperationResult.Fail(errorSummary.Trim());
+            }
+
+            string targetEmail = ValidationHelper.NormalizeEmail(request.TargetEmail)!;
+            Person? existingPerson = repository.FindByEmail(targetEmail);
+            
+            if (existingPerson == null)
+            {
+                return OperationResult.Fail("Update Error: The record you are trying to edit was not found.");
+            }
+
+            // Step 1: Apply updates to the domain object
+            existingPerson.MapFromUpdateRequest(request);
+
+            // Step 2: Save changes back to the repository
+            repository.Update(existingPerson);
+            
+            return OperationResult.Ok();
+        }
+
+        /// <summary>
+        /// Removes a person record from the system using their email address as the identifier.
+        /// </summary>
+        /// <param name="email">The email of the person to be deleted.</param>
+        /// <returns>An OperationResult indicating if the deletion was successful.</returns>
+        public OperationResult Delete(string email)
+        {
+            string? normalizedMail = ValidationHelper.NormalizeEmail(email);
+            if (string.IsNullOrEmpty(normalizedMail) == true)
+            {
+                return OperationResult.Fail("Delete Error: Email address is required for identification.");
+            }
+            
+            if (ValidationHelper.IsValidEmail(normalizedMail) == false)
+            {
+                return OperationResult.Fail("Delete Error: The provided email format is invalid.");
+            }
+
+            Person? recordToDelete = repository.FindByEmail(normalizedMail);
+            if (recordToDelete == null)
+            {
+                return OperationResult.Fail("Delete Error: No record found for the specified email.");
+            }
+
+            repository.DeleteByEmail(normalizedMail);
+            return OperationResult.Ok();
+        }
     }
 }
