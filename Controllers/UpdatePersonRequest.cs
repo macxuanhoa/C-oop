@@ -6,44 +6,68 @@ namespace EducationCentreSystem.Controllers;
 
 /// <summary>
 /// Input model used when updating an existing record.
-/// Unlike creation, most fields are optional: blank values mean "keep current".
-/// TargetEmail identifies the record to update.
+/// This class demonstrates how to prevent inheritance WITHOUT using the 'sealed' keyword 
+/// by using a private constructor and a static factory method (Private Constructor Pattern).
 /// </summary>
-public sealed record UpdatePersonRequest
+public class UpdatePersonRequest
 {
-    /// <summary>
-    /// Email used to locate the record to update.
-    /// </summary>
-    public string TargetEmail { get; init; } = string.Empty;
+    public string TargetEmail { get; }
+    public string Name { get; }
+    public string Telephone { get; }
+    public string Subject1 { get; }
+    public string Subject2 { get; }
+    public string Subject3 { get; }
+    public decimal? Salary { get; }
+    public string FullTimeOrPartTime { get; }
+    public int? WorkingHours { get; }
 
     /// <summary>
-    /// Common fields that can be updated.
+    /// PRIVATE constructor: Prevents any other class from inheriting this class.
     /// </summary>
-    public string Name { get; init; } = string.Empty;
-    public string Telephone { get; init; } = string.Empty;
+    private UpdatePersonRequest(
+        string targetEmail,
+        string name,
+        string telephone,
+        string subject1,
+        string subject2,
+        string subject3,
+        decimal? salary,
+        string fullTimeOrPartTime,
+        int? workingHours)
+    {
+        this.TargetEmail = targetEmail;
+        this.Name = name;
+        this.Telephone = telephone;
+        this.Subject1 = subject1;
+        this.Subject2 = subject2;
+        this.Subject3 = subject3;
+        this.Salary = salary;
+        this.FullTimeOrPartTime = fullTimeOrPartTime;
+        this.WorkingHours = workingHours;
+    }
 
     /// <summary>
-    /// Student fields (optional when updating).
+    /// Static factory method: The only way to create an instance of this class from the outside.
     /// </summary>
-    public string Subject1 { get; init; } = string.Empty;
-    public string Subject2 { get; init; } = string.Empty;
-    public string Subject3 { get; init; } = string.Empty;
-
-    /// <summary>
-    /// Teacher/Admin fields (optional when updating).
-    /// Null means "do not change".
-    /// </summary>
-    public decimal? Salary { get; init; }
-
-    /// <summary>
-    /// Admin fields (optional when updating).
-    /// </summary>
-    public string FullTimeOrPartTime { get; init; } = string.Empty;
-    public int? WorkingHours { get; init; }
+    public static UpdatePersonRequest Create(
+        string targetEmail,
+        string name = "",
+        string telephone = "",
+        string subject1 = "",
+        string subject2 = "",
+        string subject3 = "",
+        decimal? salary = null,
+        string fullTimeOrPartTime = "",
+        int? workingHours = null)
+    {
+        return new UpdatePersonRequest(
+            targetEmail, name, telephone, 
+            subject1, subject2, subject3, 
+            salary, fullTimeOrPartTime, workingHours);
+    }
 
     /// <summary>
     /// Validates update input and returns a dictionary of field-to-error messages.
-    /// Validation only applies to fields that are provided.
     /// </summary>
     public Dictionary<string, string> Validate()
     {

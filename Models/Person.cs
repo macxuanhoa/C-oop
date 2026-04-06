@@ -60,14 +60,14 @@ namespace EducationCentreSystem.Models
         /// This method ensures that input data is properly trimmed and normalized.
         /// </summary>
         /// <param name="request">The data transfer object containing creation details.</param>
+        
         public virtual void MapFromCreateRequest(CreatePersonRequest request)
         {
-            if (request != null)
-            {
-                this.Name = request.Name.Trim();
-                this.Email = ValidationHelper.NormalizeEmail(request.Email)!;
-                this.Telephone = ValidationHelper.NormalizeTelephone(request.Telephone)!;
-            }
+            ArgumentNullException.ThrowIfNull(request);
+
+            this.Name = request.Name.Trim();
+            this.Email = ValidationHelper.NormalizeEmail(request.Email)!;
+            this.Telephone = ValidationHelper.NormalizeTelephone(request.Telephone)!;
         }
 
         /// <summary>
@@ -77,17 +77,16 @@ namespace EducationCentreSystem.Models
         /// <param name="request">The data transfer object containing update details.</param>
         public virtual void MapFromUpdateRequest(UpdatePersonRequest request)
         {
-            if (request != null)
-            {
-                if (string.IsNullOrWhiteSpace(request.Name) == false)
-                {
-                    this.Name = request.Name.Trim();
-                }
+            ArgumentNullException.ThrowIfNull(request);
 
-                if (string.IsNullOrWhiteSpace(request.Telephone) == false)
-                {
-                    this.Telephone = ValidationHelper.NormalizeTelephone(request.Telephone)!;
-                }
+            if (string.IsNullOrWhiteSpace(request.Name) == false)
+            {
+                this.Name = request.Name.Trim();
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Telephone) == false)
+            {
+                this.Telephone = ValidationHelper.NormalizeTelephone(request.Telephone)!;
             }
         }
     }

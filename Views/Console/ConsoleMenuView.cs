@@ -173,47 +173,55 @@ public sealed class ConsoleMenuView
         System.Console.Write("Email: ");
         var email = System.Console.ReadLine() ?? string.Empty;
 
-        // Request object is validated inside the controller before persistence.
-        var request = new CreatePersonRequest
-        {
-            Role = role.Value,
-            Name = name,
-            Telephone = telephone,
-            Email = email
-        };
-
         // Group-specific input according to the coursework specification.
+        string subject1 = "";
+        string subject2 = "";
+        string subject3 = "";
+        decimal salary = 0;
+        string jobType = "";
+        int hours = 0;
+
         if (role == PersonRole.Student)
         {
             // Students store exactly three subject names.
             System.Console.Write("Subject 1: ");
-            // Records are immutable by default; "with" creates a copy with the updated field.
-            request = request with { Subject1 = System.Console.ReadLine() ?? string.Empty };
+            subject1 = System.Console.ReadLine() ?? string.Empty;
             System.Console.Write("Subject 2: ");
-            request = request with { Subject2 = System.Console.ReadLine() ?? string.Empty };
+            subject2 = System.Console.ReadLine() ?? string.Empty;
             System.Console.Write("Subject 3: ");
-            request = request with { Subject3 = System.Console.ReadLine() ?? string.Empty };
+            subject3 = System.Console.ReadLine() ?? string.Empty;
         }
-
-        if (role == PersonRole.Teacher)
+        else if (role == PersonRole.Teacher)
         {
             // Teachers have salary and two subject names.
-            request = request with { Salary = ReadDecimal("Salary") };
+            salary = ReadDecimal("Salary");
             System.Console.Write("Subject 1: ");
-            request = request with { Subject1 = System.Console.ReadLine() ?? string.Empty };
+            subject1 = System.Console.ReadLine() ?? string.Empty;
             System.Console.Write("Subject 2: ");
-            request = request with { Subject2 = System.Console.ReadLine() ?? string.Empty };
+            subject2 = System.Console.ReadLine() ?? string.Empty;
         }
-
-        if (role == PersonRole.Admin)
+        else if (role == PersonRole.Admin)
         {
             // Admin staff have salary, job type, and working hours.
-            request = request with { Salary = ReadDecimal("Salary") };
+            salary = ReadDecimal("Salary");
             System.Console.Write("FullTimeOrPartTime: ");
-            // Input is normalized inside validation/controller (e.g., Full-time vs full time).
-            request = request with { FullTimeOrPartTime = System.Console.ReadLine() ?? string.Empty };
-            request = request with { WorkingHours = ReadInt("WorkingHours") };
+            jobType = System.Console.ReadLine() ?? string.Empty;
+            hours = ReadInt("WorkingHours");
         }
+
+        // Request object is validated inside the controller before persistence.
+        var request = CreatePersonRequest.Create(
+            role: role.Value,
+            name: name,
+            telephone: telephone,
+            email: email,
+            subject1: subject1,
+            subject2: subject2,
+            subject3: subject3,
+            salary: salary,
+            fullTimeOrPartTime: jobType,
+            workingHours: hours
+        );
 
         // Controller validates input and persists the record.
         var result = _controller.Add(request);
@@ -245,47 +253,55 @@ public sealed class ConsoleMenuView
         System.Console.Write($"Telephone ({existing.Telephone}): ");
         var telephone = System.Console.ReadLine() ?? string.Empty;
 
-        // Update request supports optional fields (nullable / blank means no change).
-        var request = new UpdatePersonRequest
-        {
-            TargetEmail = email,
-            Name = name,
-            Telephone = telephone
-        };
+        // Group-specific input variables
+        string subject1 = "";
+        string subject2 = "";
+        string subject3 = "";
+        decimal? salary = null;
+        string jobType = "";
+        int? hours = null;
 
         // Only prompt for fields that match the existing runtime type.
         if (existing is Student s)
         {
             // Student update supports changing any of the three subjects.
             System.Console.Write($"Subject1 ({s.Subject1}): ");
-            // Blank input means the controller keeps the previous value.
-            request = request with { Subject1 = System.Console.ReadLine() ?? string.Empty };
+            subject1 = System.Console.ReadLine() ?? string.Empty;
             System.Console.Write($"Subject2 ({s.Subject2}): ");
-            request = request with { Subject2 = System.Console.ReadLine() ?? string.Empty };
+            subject2 = System.Console.ReadLine() ?? string.Empty;
             System.Console.Write($"Subject3 ({s.Subject3}): ");
-            request = request with { Subject3 = System.Console.ReadLine() ?? string.Empty };
+            subject3 = System.Console.ReadLine() ?? string.Empty;
         }
-
-        if (existing is Teacher t)
+        else if (existing is Teacher t)
         {
             // Teacher update supports salary and two subjects.
-            // Nullable salary allows "no change" when left blank.
-            request = request with { Salary = ReadDecimalNullable($"Salary ({t.Salary})") };
+            salary = ReadDecimalNullable($"Salary ({t.Salary})");
             System.Console.Write($"Subject1 ({t.Subject1}): ");
-            request = request with { Subject1 = System.Console.ReadLine() ?? string.Empty };
+            subject1 = System.Console.ReadLine() ?? string.Empty;
             System.Console.Write($"Subject2 ({t.Subject2}): ");
-            request = request with { Subject2 = System.Console.ReadLine() ?? string.Empty };
+            subject2 = System.Console.ReadLine() ?? string.Empty;
         }
-
-        if (existing is Admin a)
+        else if (existing is Admin a)
         {
             // Admin update supports salary, job type, and working hours.
-            request = request with { Salary = ReadDecimalNullable($"Salary ({a.Salary})") };
+            salary = ReadDecimalNullable($"Salary ({a.Salary})");
             System.Console.Write($"FullTimeOrPartTime ({a.FullTimeOrPartTime}): ");
-            request = request with { FullTimeOrPartTime = System.Console.ReadLine() ?? string.Empty };
-            // Nullable working hours allows "no change" when left blank.
-            request = request with { WorkingHours = ReadIntNullable($"WorkingHours ({a.WorkingHours})") };
+            jobType = System.Console.ReadLine() ?? string.Empty;
+            hours = ReadIntNullable($"WorkingHours ({a.WorkingHours})");
         }
+
+        // Update request supports optional fields (nullable / blank means no change).
+        var request = UpdatePersonRequest.Create(
+            targetEmail: email,
+            name: name,
+            telephone: telephone,
+            subject1: subject1,
+            subject2: subject2,
+            subject3: subject3,
+            salary: salary,
+            fullTimeOrPartTime: jobType,
+            workingHours: hours
+        );
 
         // Controller updates only the fields provided in the request.
         var result = _controller.Edit(request);

@@ -420,18 +420,17 @@ namespace EducationCentreSystem.Views.WinForms
             if (_isEditMode)
             {
                 // Update uses TargetEmail to find the record and applies only provided fields.
-                var req = new UpdatePersonRequest
-                {
-                    TargetEmail = _editTargetEmail,
-                    Name = txtName.Text,
-                    Telephone = txtTelephone.Text,
-                    Subject1 = txtSubject1.Text,
-                    Subject2 = txtSubject2.Text,
-                    Subject3 = txtSubject3.Text,
-                    Salary = salary,
-                    FullTimeOrPartTime = cmbJobType.SelectedItem?.ToString() ?? "",
-                    WorkingHours = numWorkingHours.Value > 0 ? (int)numWorkingHours.Value : null
-                };
+                var req = UpdatePersonRequest.Create(
+                    targetEmail: _editTargetEmail,
+                    name: txtName.Text,
+                    telephone: txtTelephone.Text,
+                    subject1: txtSubject1.Text,
+                    subject2: txtSubject2.Text,
+                    subject3: txtSubject3.Text,
+                    salary: salary,
+                    fullTimeOrPartTime: cmbJobType.SelectedItem?.ToString() ?? "",
+                    workingHours: numWorkingHours.Value > 0 ? (int)numWorkingHours.Value : null
+                );
 
                 // Notes about update semantics:
                 // - Blank strings are interpreted by the controller as "keep current" for some fields.
@@ -466,19 +465,18 @@ namespace EducationCentreSystem.Views.WinForms
                 {
                     // Create always includes the common fields and may include role-specific fields.
                     // Validation enforces which fields are required for each role.
-                    var req = new CreatePersonRequest
-                    {
-                        Role = role,
-                        Name = txtName.Text,
-                        Email = txtEmail.Text,
-                        Telephone = txtTelephone.Text,
-                        Subject1 = txtSubject1.Text,
-                        Subject2 = txtSubject2.Text,
-                        Subject3 = txtSubject3.Text,
-                        Salary = salary ?? 0,
-                        FullTimeOrPartTime = cmbJobType.SelectedItem?.ToString() ?? "",
-                        WorkingHours = (int)numWorkingHours.Value
-                    };
+                    var req = CreatePersonRequest.Create(
+                        role: role,
+                        name: txtName.Text,
+                        email: txtEmail.Text,
+                        telephone: txtTelephone.Text,
+                        subject1: txtSubject1.Text,
+                        subject2: txtSubject2.Text,
+                        subject3: txtSubject3.Text,
+                        salary: salary ?? 0,
+                        fullTimeOrPartTime: cmbJobType.SelectedItem?.ToString() ?? "",
+                        workingHours: (int)numWorkingHours.Value
+                    );
 
                     // Notes about create semantics:
                     // - Email is required and must be unique (checked by the controller).

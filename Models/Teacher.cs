@@ -57,13 +57,10 @@ namespace EducationCentreSystem.Models
         /// <param name="request">The creation request data transfer object.</param>
         public override void MapFromCreateRequest(CreatePersonRequest request)
         {
-            if (request != null)
-            {
-                base.MapFromCreateRequest(request);
-                this.Salary = request.Salary;
-                this.Subject1 = request.Subject1;
-                this.Subject2 = request.Subject2;
-            }
+            base.MapFromCreateRequest(request);
+            this.Salary = request.Salary;
+            this.Subject1 = request.Subject1;
+            this.Subject2 = request.Subject2;
         }
 
         /// <summary>
@@ -73,23 +70,20 @@ namespace EducationCentreSystem.Models
         /// <param name="request">The update request data transfer object.</param>
         public override void MapFromUpdateRequest(UpdatePersonRequest request)
         {
-            if (request != null)
+            base.MapFromUpdateRequest(request);
+            if (request.Salary.HasValue == true)
             {
-                base.MapFromUpdateRequest(request);
-                if (request.Salary.HasValue == true)
-                {
-                    this.Salary = request.Salary.Value;
-                }
+                this.Salary = request.Salary.Value;
+            }
 
-                if (string.IsNullOrWhiteSpace(request.Subject1) == false)
-                {
-                    this.Subject1 = request.Subject1;
-                }
+            if (string.IsNullOrWhiteSpace(request.Subject1) == false)
+            {
+                this.Subject1 = request.Subject1;
+            }
 
-                if (string.IsNullOrWhiteSpace(request.Subject2) == false)
-                {
-                    this.Subject2 = request.Subject2;
-                }
+            if (string.IsNullOrWhiteSpace(request.Subject2) == false)
+            {
+                this.Subject2 = request.Subject2;
             }
         }
     }

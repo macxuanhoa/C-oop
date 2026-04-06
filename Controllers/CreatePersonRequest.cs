@@ -6,39 +6,71 @@ namespace EducationCentreSystem.Controllers;
 
 /// <summary>
 /// Input model used when creating a new person record.
-/// Includes both common fields and role-specific fields; validation enforces required fields for creation.
+/// This class demonstrates how to prevent inheritance WITHOUT using the 'sealed' keyword 
+/// by using a private constructor and a static factory method (Private Constructor Pattern).
 /// </summary>
-public sealed record CreatePersonRequest
+public class CreatePersonRequest
 {
-    /// <summary>
-    /// Role determines which derived type will be created (Student/Teacher/Admin).
-    /// </summary>
-    public PersonRole Role { get; init; }
+    public PersonRole Role { get; }
+    public string Name { get; }
+    public string Telephone { get; }
+    public string Email { get; }
+    public string Subject1 { get; }
+    public string Subject2 { get; }
+    public string Subject3 { get; }
+    public decimal Salary { get; }
+    public string FullTimeOrPartTime { get; }
+    public int WorkingHours { get; }
 
     /// <summary>
-    /// Common fields required for all roles.
+    /// PRIVATE constructor: Prevents any other class from inheriting this class,
+    /// because a derived class must be able to call its parent's constructor.
     /// </summary>
-    public string Name { get; init; } = string.Empty;
-    public string Telephone { get; init; } = string.Empty;
-    public string Email { get; init; } = string.Empty;
+    private CreatePersonRequest(
+        PersonRole role,
+        string name,
+        string telephone,
+        string email,
+        string subject1,
+        string subject2,
+        string subject3,
+        decimal salary,
+        string fullTimeOrPartTime,
+        int workingHours)
+    {
+        this.Role = role;
+        this.Name = name;
+        this.Telephone = telephone;
+        this.Email = email;
+        this.Subject1 = subject1;
+        this.Subject2 = subject2;
+        this.Subject3 = subject3;
+        this.Salary = salary;
+        this.FullTimeOrPartTime = fullTimeOrPartTime;
+        this.WorkingHours = workingHours;
+    }
 
     /// <summary>
-    /// Student fields (three subjects). Only used when Role is Student.
+    /// Static factory method: The only way to create an instance of this class from the outside.
+    /// This provides a controlled entry point for object creation.
     /// </summary>
-    public string Subject1 { get; init; } = string.Empty;
-    public string Subject2 { get; init; } = string.Empty;
-    public string Subject3 { get; init; } = string.Empty;
-
-    /// <summary>
-    /// Teacher/Admin fields (salary). Required for Teacher and Admin.
-    /// </summary>
-    public decimal Salary { get; init; }
-
-    /// <summary>
-    /// Admin fields (job type and working hours). Required for Admin.
-    /// </summary>
-    public string FullTimeOrPartTime { get; init; } = string.Empty;
-    public int WorkingHours { get; init; }
+    public static CreatePersonRequest Create(
+        PersonRole role,
+        string name,
+        string telephone,
+        string email,
+        string subject1 = "",
+        string subject2 = "",
+        string subject3 = "",
+        decimal salary = 0,
+        string fullTimeOrPartTime = "",
+        int workingHours = 0)
+    {
+        return new CreatePersonRequest(
+            role, name, telephone, email, 
+            subject1, subject2, subject3, 
+            salary, fullTimeOrPartTime, workingHours);
+    }
 
     /// <summary>
     /// Validates creation input and returns a dictionary of field-to-error messages.

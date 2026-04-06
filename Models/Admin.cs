@@ -50,13 +50,10 @@ namespace EducationCentreSystem.Models
         /// <param name="request">The creation request data transfer object.</param>
         public override void MapFromCreateRequest(CreatePersonRequest request)
         {
-            if (request != null)
-            {
-                base.MapFromCreateRequest(request);
-                this.Salary = request.Salary;
-                this.FullTimeOrPartTime = ValidationHelper.NormalizeJobType(request.FullTimeOrPartTime)!;
-                this.WorkingHours = request.WorkingHours;
-            }
+            base.MapFromCreateRequest(request);
+            this.Salary = request.Salary;
+            this.FullTimeOrPartTime = ValidationHelper.NormalizeJobType(request.FullTimeOrPartTime)!;
+            this.WorkingHours = request.WorkingHours;
         }
 
         /// <summary>
@@ -66,23 +63,20 @@ namespace EducationCentreSystem.Models
         /// <param name="request">The update request data transfer object.</param>
         public override void MapFromUpdateRequest(UpdatePersonRequest request)
         {
-            if (request != null)
+            base.MapFromUpdateRequest(request);
+            if (request.Salary.HasValue == true)
             {
-                base.MapFromUpdateRequest(request);
-                if (request.Salary.HasValue == true)
-                {
-                    this.Salary = request.Salary.Value;
-                }
+                this.Salary = request.Salary.Value;
+            }
 
-                if (string.IsNullOrWhiteSpace(request.FullTimeOrPartTime) == false)
-                {
-                    this.FullTimeOrPartTime = ValidationHelper.NormalizeJobType(request.FullTimeOrPartTime)!;
-                }
+            if (string.IsNullOrWhiteSpace(request.FullTimeOrPartTime) == false)
+            {
+                this.FullTimeOrPartTime = ValidationHelper.NormalizeJobType(request.FullTimeOrPartTime)!;
+            }
 
-                if (request.WorkingHours.HasValue == true)
-                {
-                    this.WorkingHours = request.WorkingHours.Value;
-                }
+            if (request.WorkingHours.HasValue == true)
+            {
+                this.WorkingHours = request.WorkingHours.Value;
             }
         }
     }
