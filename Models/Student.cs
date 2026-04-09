@@ -6,7 +6,7 @@ namespace EducationCentreSystem.Models
     /// Represents a Student entity within the education centre.
     /// This class extends the Person base class and includes student-specific subject enrollments.
     /// </summary>
-    public sealed class Student : Person
+    public class Student : Person
     {
         /// <summary>
         /// Gets or sets the name of the first subject the student is enrolled in.

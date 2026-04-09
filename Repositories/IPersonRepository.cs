@@ -12,12 +12,12 @@ public interface IPersonRepository
     /// <summary>
     /// Returns all records currently stored.
     /// </summary>
-    IReadOnlyList<Person> GetAll();
+    List<Person> GetAll();
 
     /// <summary>
     /// Returns all records for a specific role.
     /// </summary>
-    IReadOnlyList<Person> GetByRole(PersonRole role);
+    List<Person> GetByRole(PersonRole role);
 
     /// <summary>
     /// Finds a record by email, or returns null if not found.

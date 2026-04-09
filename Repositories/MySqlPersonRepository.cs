@@ -18,18 +18,12 @@ namespace EducationCentreSystem.Repositories;
 /// - UI/controller depend only on IPersonRepository, so switching between MySQL and in-memory requires no changes elsewhere.
 /// - All queries are parameterized to avoid SQL injection and handle user input safely.
 /// </remarks>
-public sealed class MySqlPersonRepository : IPersonRepository
+public class MySqlPersonRepository : IPersonRepository
 {
     // Centralized column list to avoid repeating the same SELECT projection across queries.
-    private const string SelectColumns = 
-        """
-        PersonId, Role, Name, Telephone, Email,
-        StudentSubject1, StudentSubject2, StudentSubject3,
-        TeacherSalary, TeacherSubject1, TeacherSubject2,
-        AdminSalary, AdminFullTimeOrPartTime, AdminWorkingHours
-        """;
+    private const string SelectColumns = "PersonId, Role, Name, Telephone, Email, StudentSubject1, StudentSubject2, StudentSubject3, TeacherSalary, TeacherSubject1, TeacherSubject2, AdminSalary, AdminFullTimeOrPartTime, AdminWorkingHours";
 
-    private readonly string _connectionString;
+    private string _connectionString;
 
     /// <summary>
     /// Creates a repository that will connect using the supplied connection string.
@@ -42,26 +36,25 @@ public sealed class MySqlPersonRepository : IPersonRepository
     /// <summary>
     /// Returns all records from the People table.
     /// </summary>
-    public IReadOnlyList<Person> GetAll()
+    public List<Person> GetAll()
     {
-        using var conn = new MySqlConnection(_connectionString);
-        conn.Open();
-
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText =
-            $"""
-            -- Read all records in a stable order (by PersonId).
-            -- The projection matches the People table schema and supports mapping into derived types.
-            SELECT {SelectColumns}
-            FROM People
-            ORDER BY PersonId;
-            """;
-
-        using var reader = cmd.ExecuteReader();
-        var list = new List<Person>();
-        while (reader.Read())
+        List<Person> list = new List<Person>();
+        using (MySqlConnection conn = new MySqlConnection(_connectionString))
         {
-            list.Add(Map(reader));
+            conn.Open();
+
+            using (MySqlCommand cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "SELECT " + SelectColumns + " FROM People ORDER BY PersonId;";
+
+                using (MySqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        list.Add(Map(reader));
+                    }
+                }
+            }
         }
 
         return list;
@@ -70,27 +63,26 @@ public sealed class MySqlPersonRepository : IPersonRepository
     /// <summary>
     /// Returns all records of a specific role.
     /// </summary>
-    public IReadOnlyList<Person> GetByRole(PersonRole role)
+    public List<Person> GetByRole(PersonRole role)
     {
-        using var conn = new MySqlConnection(_connectionString);
-        conn.Open();
-
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText =
-            $"""
-            -- Filter by role (Teacher/Admin/Student) while using the same projection as GetAll.
-            SELECT {SelectColumns}
-            FROM People
-            WHERE Role = @Role
-            ORDER BY PersonId;
-            """;
-        cmd.Parameters.AddWithValue("@Role", role.ToString());
-
-        using var reader = cmd.ExecuteReader();
-        var list = new List<Person>();
-        while (reader.Read())
+        List<Person> list = new List<Person>();
+        using (MySqlConnection conn = new MySqlConnection(_connectionString))
         {
-            list.Add(Map(reader));
+            conn.Open();
+
+            using (MySqlCommand cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "SELECT " + SelectColumns + " FROM People WHERE Role = @Role ORDER BY PersonId;";
+                cmd.Parameters.AddWithValue("@Role", role.ToString());
+
+                using (MySqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        list.Add(Map(reader));
+                    }
+                }
+            }
         }
 
         return list;
@@ -100,25 +92,24 @@ public sealed class MySqlPersonRepository : IPersonRepository
     /// Finds a record by email (case-insensitive).
     /// Uses a parameterized query to avoid SQL injection.
     /// </summary>
-    public Person? FindByEmail(string email)
+    public Person FindByEmail(string email)
     {
-        using var conn = new MySqlConnection(_connectionString);
-        conn.Open();
+        using (MySqlConnection conn = new MySqlConnection(_connectionString))
+        {
+            conn.Open();
 
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText =
-            $"""
-            -- Email is treated as case-insensitive for lookup to match UI/controller behavior.
-            SELECT {SelectColumns}
-            FROM People
-            WHERE UPPER(Email) = UPPER(@Email)
-            LIMIT 1;
-            """;
-        cmd.Parameters.AddWithValue("@Email", email.Trim());
+            using (MySqlCommand cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "SELECT " + SelectColumns + " FROM People WHERE UPPER(Email) = UPPER(@Email) LIMIT 1;";
+                cmd.Parameters.AddWithValue("@Email", email.Trim());
 
-        using var reader = cmd.ExecuteReader();
-        if (!reader.Read()) return null;
-        return Map(reader);
+                using (MySqlDataReader reader = cmd.ExecuteReader())
+                {
+                    if (!reader.Read()) return null;
+                    return Map(reader);
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -126,15 +117,18 @@ public sealed class MySqlPersonRepository : IPersonRepository
     /// </summary>
     public bool EmailExists(string email)
     {
-        using var conn = new MySqlConnection(_connectionString);
-        conn.Open();
+        using (MySqlConnection conn = new MySqlConnection(_connectionString))
+        {
+            conn.Open();
 
-        using var cmd = conn.CreateCommand();
-        // Uses a lightweight scalar query to avoid fetching a full row when only existence is needed.
-        cmd.CommandText = "SELECT 1 FROM People WHERE UPPER(Email) = UPPER(@Email) LIMIT 1;";
-        cmd.Parameters.AddWithValue("@Email", email.Trim());
-        var result = cmd.ExecuteScalar();
-        return result != null;
+            using (MySqlCommand cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "SELECT 1 FROM People WHERE UPPER(Email) = UPPER(@Email) LIMIT 1;";
+                cmd.Parameters.AddWithValue("@Email", email.Trim());
+                object result = cmd.ExecuteScalar();
+                return result != null;
+            }
+        }
     }
 
     /// <summary>
@@ -142,34 +136,22 @@ public sealed class MySqlPersonRepository : IPersonRepository
     /// </summary>
     public Person Add(Person person)
     {
-        using var conn = new MySqlConnection(_connectionString);
-        conn.Open();
+        using (MySqlConnection conn = new MySqlConnection(_connectionString))
+        {
+            conn.Open();
 
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText =
-            """
-            -- Insert stores both common fields and role-specific nullable columns in one table.
-            INSERT INTO People
-                (Role, Name, Telephone, Email,
-                 StudentSubject1, StudentSubject2, StudentSubject3,
-                 TeacherSalary, TeacherSubject1, TeacherSubject2,
-                 AdminSalary, AdminFullTimeOrPartTime, AdminWorkingHours)
-            VALUES
-                (@Role, @Name, @Telephone, @Email,
-                 @StudentSubject1, @StudentSubject2, @StudentSubject3,
-                 @TeacherSalary, @TeacherSubject1, @TeacherSubject2,
-                 @AdminSalary, @AdminFullTimeOrPartTime, @AdminWorkingHours);
-            SELECT LAST_INSERT_ID();
-            """;
+            using (MySqlCommand cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "INSERT INTO People (Role, Name, Telephone, Email, StudentSubject1, StudentSubject2, StudentSubject3, TeacherSalary, TeacherSubject1, TeacherSubject2, AdminSalary, AdminFullTimeOrPartTime, AdminWorkingHours) VALUES (@Role, @Name, @Telephone, @Email, @StudentSubject1, @StudentSubject2, @StudentSubject3, @TeacherSalary, @TeacherSubject1, @TeacherSubject2, @AdminSalary, @AdminFullTimeOrPartTime, @AdminWorkingHours); SELECT LAST_INSERT_ID();";
 
-        // Bind parameters as values (prevents SQL injection and handles quoting correctly).
-        BindCommon(cmd, person);
-        BindRoleSpecific(cmd, person);
+                BindCommon(cmd, person);
+                BindRoleSpecific(cmd, person);
 
-        // MySQL returns the generated identity value; assign it back to the in-memory object.
-        var id = Convert.ToInt32(cmd.ExecuteScalar());
-        person.Id = id;
-        return person;
+                int id = Convert.ToInt32(cmd.ExecuteScalar());
+                person.Id = id;
+                return person;
+            }
+        }
     }
 
     /// <summary>
@@ -177,33 +159,19 @@ public sealed class MySqlPersonRepository : IPersonRepository
     /// </summary>
     public void Update(Person person)
     {
-        using var conn = new MySqlConnection(_connectionString);
-        conn.Open();
+        using (MySqlConnection conn = new MySqlConnection(_connectionString))
+        {
+            conn.Open();
 
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText =
-            """
-            -- Update matches by email, because email is treated as the stable identifier in this project.
-            -- Only role-specific columns relevant to the runtime type should be meaningful; others remain null/empty.
-            UPDATE People
-            SET Name = @Name,
-                Telephone = @Telephone,
-                StudentSubject1 = @StudentSubject1,
-                StudentSubject2 = @StudentSubject2,
-                StudentSubject3 = @StudentSubject3,
-                TeacherSalary = @TeacherSalary,
-                TeacherSubject1 = @TeacherSubject1,
-                TeacherSubject2 = @TeacherSubject2,
-                AdminSalary = @AdminSalary,
-                AdminFullTimeOrPartTime = @AdminFullTimeOrPartTime,
-                AdminWorkingHours = @AdminWorkingHours
-            WHERE UPPER(Email) = UPPER(@Email);
-            """;
+            using (MySqlCommand cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "UPDATE People SET Name = @Name, Telephone = @Telephone, StudentSubject1 = @StudentSubject1, StudentSubject2 = @StudentSubject2, StudentSubject3 = @StudentSubject3, TeacherSalary = @TeacherSalary, TeacherSubject1 = @TeacherSubject1, TeacherSubject2 = @TeacherSubject2, AdminSalary = @AdminSalary, AdminFullTimeOrPartTime = @AdminFullTimeOrPartTime, AdminWorkingHours = @AdminWorkingHours WHERE UPPER(Email) = UPPER(@Email);";
 
-        // Same binding helpers are reused to keep insert/update consistent.
-        BindCommon(cmd, person);
-        BindRoleSpecific(cmd, person);
-        cmd.ExecuteNonQuery();
+                BindCommon(cmd, person);
+                BindRoleSpecific(cmd, person);
+                cmd.ExecuteNonQuery();
+            }
+        }
     }
 
     /// <summary>
@@ -211,14 +179,17 @@ public sealed class MySqlPersonRepository : IPersonRepository
     /// </summary>
     public void DeleteByEmail(string email)
     {
-        using var conn = new MySqlConnection(_connectionString);
-        conn.Open();
+        using (MySqlConnection conn = new MySqlConnection(_connectionString))
+        {
+            conn.Open();
 
-        using var cmd = conn.CreateCommand();
-        // Parameterized delete avoids string concatenation and is safe for user-provided input.
-        cmd.CommandText = "DELETE FROM People WHERE UPPER(Email) = UPPER(@Email);";
-        cmd.Parameters.AddWithValue("@Email", email.Trim());
-        cmd.ExecuteNonQuery();
+            using (MySqlCommand cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "DELETE FROM People WHERE UPPER(Email) = UPPER(@Email);";
+                cmd.Parameters.AddWithValue("@Email", email.Trim());
+                cmd.ExecuteNonQuery();
+            }
+        }
     }
 
     /// <summary>
@@ -238,20 +209,39 @@ public sealed class MySqlPersonRepository : IPersonRepository
     /// </summary>
     private static void BindRoleSpecific(MySqlCommand cmd, Person person)
     {
-        // Student columns are null for non-students.
-        cmd.Parameters.AddWithValue("@StudentSubject1", person is Student s ? s.Subject1 : null);
-        cmd.Parameters.AddWithValue("@StudentSubject2", person is Student s2 ? s2.Subject2 : null);
-        cmd.Parameters.AddWithValue("@StudentSubject3", person is Student s3 ? s3.Subject3 : null);
+        cmd.Parameters.AddWithValue("@StudentSubject1", null);
+        cmd.Parameters.AddWithValue("@StudentSubject2", null);
+        cmd.Parameters.AddWithValue("@StudentSubject3", null);
+        cmd.Parameters.AddWithValue("@TeacherSalary", null);
+        cmd.Parameters.AddWithValue("@TeacherSubject1", null);
+        cmd.Parameters.AddWithValue("@TeacherSubject2", null);
+        cmd.Parameters.AddWithValue("@AdminSalary", null);
+        cmd.Parameters.AddWithValue("@AdminFullTimeOrPartTime", null);
+        cmd.Parameters.AddWithValue("@AdminWorkingHours", null);
 
-        // Teacher columns are null for non-teachers.
-        cmd.Parameters.AddWithValue("@TeacherSalary", person is Teacher t ? t.Salary : null);
-        cmd.Parameters.AddWithValue("@TeacherSubject1", person is Teacher t1 ? t1.Subject1 : null);
-        cmd.Parameters.AddWithValue("@TeacherSubject2", person is Teacher t2 ? t2.Subject2 : null);
+        if (person is Student)
+        {
+            Student s = (Student)person;
+            cmd.Parameters["@StudentSubject1"].Value = s.Subject1;
+            cmd.Parameters["@StudentSubject2"].Value = s.Subject2;
+            cmd.Parameters["@StudentSubject3"].Value = s.Subject3;
+        }
 
-        // Admin columns are null for non-admins.
-        cmd.Parameters.AddWithValue("@AdminSalary", person is Admin a ? a.Salary : null);
-        cmd.Parameters.AddWithValue("@AdminFullTimeOrPartTime", person is Admin a1 ? a1.FullTimeOrPartTime : null);
-        cmd.Parameters.AddWithValue("@AdminWorkingHours", person is Admin a2 ? a2.WorkingHours : null);
+        if (person is Teacher)
+        {
+            Teacher t = (Teacher)person;
+            cmd.Parameters["@TeacherSalary"].Value = t.Salary;
+            cmd.Parameters["@TeacherSubject1"].Value = t.Subject1;
+            cmd.Parameters["@TeacherSubject2"].Value = t.Subject2;
+        }
+
+        if (person is Admin)
+        {
+            Admin a = (Admin)person;
+            cmd.Parameters["@AdminSalary"].Value = a.Salary;
+            cmd.Parameters["@AdminFullTimeOrPartTime"].Value = a.FullTimeOrPartTime;
+            cmd.Parameters["@AdminWorkingHours"].Value = a.WorkingHours;
+        }
     }
 
     /// <summary>
@@ -259,40 +249,37 @@ public sealed class MySqlPersonRepository : IPersonRepository
     /// </summary>
     private static Person Map(MySqlDataReader reader)
     {
-        // Row contains a Role column; use it to construct the correct derived type.
-        var personId = reader.GetInt32("PersonId");
-        var roleText = reader.GetString("Role");
-        var role = Enum.Parse<PersonRole>(roleText, ignoreCase: true);
+        int personId = reader.GetInt32("PersonId");
+        string roleText = reader.GetString("Role");
+        PersonRole role = (PersonRole)Enum.Parse(typeof(PersonRole), roleText, true);
 
-        // Factory chooses Student/Teacher/Admin so the returned object matches the role.
-        var person = PersonFactory.Create(role);
+        Person person = PersonFactory.Create(role);
         person.Id = personId;
 
-        if (person is Student s)
+        if (person is Student)
         {
-            // Students store 3 subjects.
+            Student s = (Student)person;
             s.Subject1 = GetStringOrEmpty(reader, "StudentSubject1");
             s.Subject2 = GetStringOrEmpty(reader, "StudentSubject2");
             s.Subject3 = GetStringOrEmpty(reader, "StudentSubject3");
         }
 
-        if (person is Teacher t)
+        if (person is Teacher)
         {
-            // Teachers store salary and 2 subjects.
+            Teacher t = (Teacher)person;
             t.Salary = GetDecimalOrZero(reader, "TeacherSalary");
             t.Subject1 = GetStringOrEmpty(reader, "TeacherSubject1");
             t.Subject2 = GetStringOrEmpty(reader, "TeacherSubject2");
         }
 
-        if (person is Admin a)
+        if (person is Admin)
         {
-            // Admins store salary, job type, and working hours.
+            Admin a = (Admin)person;
             a.Salary = GetDecimalOrZero(reader, "AdminSalary");
             a.FullTimeOrPartTime = GetStringOrEmpty(reader, "AdminFullTimeOrPartTime");
             a.WorkingHours = GetIntOrZero(reader, "AdminWorkingHours");
         }
 
-        // Common fields are populated for all roles.
         person.Name = reader.GetString("Name");
         person.Telephone = reader.GetString("Telephone");
         person.Email = reader.GetString("Email");
@@ -304,7 +291,7 @@ public sealed class MySqlPersonRepository : IPersonRepository
     /// </summary>
     private static string GetStringOrEmpty(MySqlDataReader reader, string column)
     {
-        var i = reader.GetOrdinal(column);
+        int i = reader.GetOrdinal(column);
         return reader.IsDBNull(i) ? string.Empty : reader.GetString(i);
     }
 
@@ -313,7 +300,7 @@ public sealed class MySqlPersonRepository : IPersonRepository
     /// </summary>
     private static decimal GetDecimalOrZero(MySqlDataReader reader, string column)
     {
-        var i = reader.GetOrdinal(column);
+        int i = reader.GetOrdinal(column);
         return reader.IsDBNull(i) ? 0m : reader.GetDecimal(i);
     }
 
@@ -322,7 +309,7 @@ public sealed class MySqlPersonRepository : IPersonRepository
     /// </summary>
     private static int GetIntOrZero(MySqlDataReader reader, string column)
     {
-        var i = reader.GetOrdinal(column);
+        int i = reader.GetOrdinal(column);
         return reader.IsDBNull(i) ? 0 : reader.GetInt32(i);
     }
 }

@@ -31,7 +31,7 @@ namespace EducationCentreSystem.Views.WinForms
         /// <summary>
         /// Controller that exposes CRUD operations and hides storage details (in-memory vs MySQL).
         /// </summary>
-        private readonly PersonController _controller;
+        private PersonController _controller;
 
         /// <summary>
         /// Tracks whether the form is currently editing an existing record or adding a new one.
@@ -70,7 +70,7 @@ namespace EducationCentreSystem.Views.WinForms
 
             // Filter dropdown includes an "All" option plus each enum value.
             cmbFilterRole.Items.Add("All");
-            foreach (var role in Enum.GetValues(typeof(PersonRole)))
+            foreach (PersonRole role in Enum.GetValues(typeof(PersonRole)))
             {
                 cmbFilterRole.Items.Add(role);
             }
@@ -103,7 +103,7 @@ namespace EducationCentreSystem.Views.WinForms
             dgvPersons.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Telephone", HeaderText = "Telephone", FillWeight = 80 });
             
             // This column is computed at runtime to show role-specific information in one place.
-            var detailsCol = new DataGridViewTextBoxColumn { HeaderText = "Detailed Info", FillWeight = 200, Name = "DetailedInfo" };
+            DataGridViewTextBoxColumn detailsCol = new DataGridViewTextBoxColumn { HeaderText = "Detailed Info", FillWeight = 200, Name = "DetailedInfo" };
             dgvPersons.Columns.Add(detailsCol);
             
             // Remove previous handler to avoid duplicate attachments
@@ -120,25 +120,29 @@ namespace EducationCentreSystem.Views.WinForms
             // Only handle formatting for the computed "DetailedInfo" column.
             if (e.RowIndex >= 0 && dgvPersons.Columns[e.ColumnIndex].Name == "DetailedInfo")
             {
-                if (dgvPersons.Rows[e.RowIndex].DataBoundItem is Person person)
+                if (dgvPersons.Rows[e.RowIndex].DataBoundItem is Person)
                 {
+                    Person person = (Person)dgvPersons.Rows[e.RowIndex].DataBoundItem;
                     // Role-specific display using type checks.
-                    if (person is Student s) 
+                    if (person is Student) 
                     {
+                        Student s = (Student)person;
                         // Student: show three subjects.
-                        e.Value = $"Subjects: {s.Subject1}, {s.Subject2}, {s.Subject3}";
+                        e.Value = "Subjects: " + s.Subject1 + ", " + s.Subject2 + ", " + s.Subject3;
                         e.FormattingApplied = true;
                     }
-                    else if (person is Teacher t) 
+                    else if (person is Teacher) 
                     {
+                        Teacher t = (Teacher)person;
                         // Teacher: show salary and two subjects.
-                        e.Value = $"Salary: {t.Salary:C}, Subjects: {t.Subject1}, {t.Subject2}";
+                        e.Value = "Salary: $" + t.Salary.ToString("0.00") + ", Subjects: " + t.Subject1 + ", " + t.Subject2;
                         e.FormattingApplied = true;
                     }
-                    else if (person is Admin a) 
+                    else if (person is Admin) 
                     {
+                        Admin a = (Admin)person;
                         // Admin: show salary, job type, and working hours.
-                        e.Value = $"Salary: {a.Salary:C}, Type: {a.FullTimeOrPartTime}, Hours: {a.WorkingHours}";
+                        e.Value = "Salary: $" + a.Salary.ToString("0.00") + ", Type: " + a.FullTimeOrPartTime + ", Hours: " + a.WorkingHours;
                         e.FormattingApplied = true;
                     }
                 }
@@ -165,7 +169,8 @@ namespace EducationCentreSystem.Views.WinForms
             else
             {
                 // Filter selection is stored as text; parse it back into the enum.
-                if (Enum.TryParse<PersonRole>(cmbFilterRole.SelectedItem?.ToString(), out var role))
+                PersonRole role;
+                if (Enum.TryParse<PersonRole>(cmbFilterRole.SelectedItem?.ToString(), out role))
                 {
                     query = _controller.ViewByRole(role);
                 }
@@ -177,7 +182,7 @@ namespace EducationCentreSystem.Views.WinForms
             }
 
             // 2. Search
-            var searchText = txtSearch.Text.Trim();
+            string searchText = txtSearch.Text.Trim();
             if (!string.IsNullOrEmpty(searchText))
             {
                 // SearchBy combo selects which field to search.
@@ -210,7 +215,7 @@ namespace EducationCentreSystem.Views.WinForms
             }
 
             // Materialize to a list so the DataGridView binds to a concrete collection.
-            var list = query.ToList();
+            List<Person> list = query.ToList();
             dgvPersons.DataSource = list;
 
             if (list.Count == 0 && !string.IsNullOrEmpty(searchText))
@@ -420,7 +425,7 @@ namespace EducationCentreSystem.Views.WinForms
             if (_isEditMode)
             {
                 // Update uses TargetEmail to find the record and applies only provided fields.
-                var req = UpdatePersonRequest.Create(
+                UpdatePersonRequest req = UpdatePersonRequest.Create(
                     targetEmail: _editTargetEmail,
                     name: txtName.Text,
                     telephone: txtTelephone.Text,
@@ -438,7 +443,7 @@ namespace EducationCentreSystem.Views.WinForms
                 // - Job type is validated only when provided.
 
                 // Validate request and display field-level errors in the UI.
-                var validationErrors = req.Validate();
+                Dictionary<string, string> validationErrors = req.Validate();
                 if (validationErrors.Count > 0)
                 {
                     MapErrorsToUI(validationErrors);
@@ -446,7 +451,7 @@ namespace EducationCentreSystem.Views.WinForms
                 }
 
                 // Controller performs repository update; UI reacts to success/failure.
-                var res = _controller.Edit(req);
+                OperationResult res = _controller.Edit(req);
                 if (res.Success)
                 {
                     // Exit edit mode and refresh list.
@@ -461,11 +466,12 @@ namespace EducationCentreSystem.Views.WinForms
             else
             {
                 // Create requires the role to determine which derived type is created.
-                if (cmbRole.SelectedItem is PersonRole role)
+                if (cmbRole.SelectedItem is PersonRole)
                 {
+                    PersonRole role = (PersonRole)cmbRole.SelectedItem;
                     // Create always includes the common fields and may include role-specific fields.
                     // Validation enforces which fields are required for each role.
-                    var req = CreatePersonRequest.Create(
+                    CreatePersonRequest req = CreatePersonRequest.Create(
                         role: role,
                         name: txtName.Text,
                         email: txtEmail.Text,
@@ -484,7 +490,7 @@ namespace EducationCentreSystem.Views.WinForms
                     // - WorkingHours and job type are only required for Admin.
 
                     // Validate request and display field-level errors in the UI.
-                    var validationErrors = req.Validate();
+                    Dictionary<string, string> validationErrors = req.Validate();
                     if (validationErrors.Count > 0)
                     {
                         MapErrorsToUI(validationErrors);
@@ -492,7 +498,7 @@ namespace EducationCentreSystem.Views.WinForms
                     }
 
                     // Controller performs repository insert and checks unique email.
-                    var res = _controller.Add(req);
+                    OperationResult<Person> res = _controller.Add(req);
                     if (res.Success)
                     {
                         // Exit add mode and refresh list.
@@ -518,18 +524,18 @@ namespace EducationCentreSystem.Views.WinForms
         private void MapErrorsToUI(Dictionary<string, string> errors)
         {
             // Field keys come from nameof(...) in validation logic.
-            foreach (var error in errors)
+            foreach (KeyValuePair<string, string> error in errors)
             {
-                Control? control = error.Key switch
+                Control control = null;
+                switch (error.Key)
                 {
-                    "Name" => txtName,
-                    "Email" => txtEmail,
-                    "Telephone" => txtTelephone,
-                    "Salary" => txtSalary,
-                    "FullTimeOrPartTime" => cmbJobType,
-                    "WorkingHours" => numWorkingHours,
-                    _ => null
-                };
+                    case "Name": control = txtName; break;
+                    case "Email": control = txtEmail; break;
+                    case "Telephone": control = txtTelephone; break;
+                    case "Salary": control = txtSalary; break;
+                    case "FullTimeOrPartTime": control = cmbJobType; break;
+                    case "WorkingHours": control = numWorkingHours; break;
+                }
 
                 if (control != null)
                 {
@@ -563,8 +569,9 @@ namespace EducationCentreSystem.Views.WinForms
         /// </summary>
         private void UpdateVisibility()
         {
-            if (cmbRole.SelectedItem is PersonRole role)
+            if (cmbRole.SelectedItem is PersonRole)
             {
+                PersonRole role = (PersonRole)cmbRole.SelectedItem;
                 bool isStudent = role == PersonRole.Student;
                 bool isTeacher = role == PersonRole.Teacher;
                 bool isAdmin = role == PersonRole.Admin;

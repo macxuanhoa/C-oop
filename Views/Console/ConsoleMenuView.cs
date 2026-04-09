@@ -1,5 +1,6 @@
 using EducationCentreSystem.Controllers;
 using EducationCentreSystem.Models;
+using EducationCentreSystem.Common;
 
 namespace EducationCentreSystem.Views.Console;
 
@@ -20,9 +21,9 @@ namespace EducationCentreSystem.Views.Console;
 /// - Input is validated in request models and the controller; the menu focuses on prompting and display.
 /// - Polymorphism is visible when printing records: GetDetails() is overridden in derived classes.
 /// </remarks>
-public sealed class ConsoleMenuView
+public class ConsoleMenuView
 {
-    private readonly PersonController _controller;
+    private PersonController _controller;
 
     /// <summary>
     /// Creates the console view with a controller dependency.
@@ -38,7 +39,7 @@ public sealed class ConsoleMenuView
     public void Run()
     {
         // Console UI is implemented as a loop so the user can perform multiple actions in one session.
-        var exit = false;
+        bool exit = false;
         while (!exit)
         {
             // Main menu options (coursework requirements).
@@ -52,7 +53,7 @@ public sealed class ConsoleMenuView
             System.Console.Write("Enter choice (1-6): ");
 
             // ReadLine returns null on input stream end; null falls into default case below.
-            var choice = System.Console.ReadLine();
+            string choice = System.Console.ReadLine();
             switch (choice)
             {
                 case "1":
@@ -93,7 +94,7 @@ public sealed class ConsoleMenuView
     private void ViewAll()
     {
         // Controller returns a snapshot list so the UI never manipulates repository state directly.
-        var all = _controller.ViewAll();
+        List<Person> all = _controller.ViewAll();
         if (all.Count == 0)
         {
             System.Console.WriteLine("No records found.");
@@ -102,7 +103,7 @@ public sealed class ConsoleMenuView
 
         System.Console.WriteLine("\n--- ALL RECORDS ---");
         // Polymorphism: GetDetails() calls the overridden implementation for Student/Teacher/Admin.
-        foreach (var p in all) System.Console.WriteLine(p.GetDetails());
+        foreach (Person p in all) System.Console.WriteLine(p.GetDetails());
     }
 
     /// <summary>
@@ -116,7 +117,7 @@ public sealed class ConsoleMenuView
         System.Console.WriteLine("2. Teacher");
         System.Console.WriteLine("3. Admin");
         System.Console.Write("Enter choice (1/2/3): ");
-        var roleChoice = System.Console.ReadLine();
+        string roleChoice = System.Console.ReadLine();
 
         // Map numeric choice to enum. Null indicates invalid choice.
         PersonRole? role = roleChoice == "1" ? PersonRole.Student :
@@ -130,15 +131,15 @@ public sealed class ConsoleMenuView
         }
 
         // Role filtering is delegated to the controller/repository layer.
-        var list = _controller.ViewByRole(role.Value);
+        List<Person> list = _controller.ViewByRole(role.Value);
         if (list.Count == 0)
         {
             System.Console.WriteLine("No records found for this role.");
             return;
         }
 
-        System.Console.WriteLine($"\n--- {role.Value.ToString().ToUpperInvariant()} LIST ---");
-        foreach (var p in list) System.Console.WriteLine(p.GetDetails());
+        System.Console.WriteLine("\n--- " + role.Value.ToString().ToUpperInvariant() + " LIST ---");
+        foreach (Person p in list) System.Console.WriteLine(p.GetDetails());
     }
 
     /// <summary>
@@ -152,7 +153,7 @@ public sealed class ConsoleMenuView
         System.Console.WriteLine("2. Teacher");
         System.Console.WriteLine("3. Admin");
         System.Console.Write("Enter choice (1/2/3): ");
-        var roleChoice = System.Console.ReadLine();
+        string roleChoice = System.Console.ReadLine();
 
         // Same mapping approach as ViewByRole() to keep UI consistent.
         PersonRole? role = roleChoice == "1" ? PersonRole.Student :
@@ -167,11 +168,11 @@ public sealed class ConsoleMenuView
 
         // Common fields required for all roles.
         System.Console.Write("Name: ");
-        var name = System.Console.ReadLine() ?? string.Empty;
+        string name = System.Console.ReadLine() ?? string.Empty;
         System.Console.Write("Telephone: ");
-        var telephone = System.Console.ReadLine() ?? string.Empty;
+        string telephone = System.Console.ReadLine() ?? string.Empty;
         System.Console.Write("Email: ");
-        var email = System.Console.ReadLine() ?? string.Empty;
+        string email = System.Console.ReadLine() ?? string.Empty;
 
         // Group-specific input according to the coursework specification.
         string subject1 = "";
@@ -210,7 +211,7 @@ public sealed class ConsoleMenuView
         }
 
         // Request object is validated inside the controller before persistence.
-        var request = CreatePersonRequest.Create(
+        CreatePersonRequest request = CreatePersonRequest.Create(
             role: role.Value,
             name: name,
             telephone: telephone,
@@ -224,7 +225,7 @@ public sealed class ConsoleMenuView
         );
 
         // Controller validates input and persists the record.
-        var result = _controller.Add(request);
+        OperationResult<Person> result = _controller.Add(request);
         System.Console.WriteLine(result.Success ? "Added successfully." : result.Error);
     }
 
@@ -236,10 +237,10 @@ public sealed class ConsoleMenuView
     {
         // Email is the identifier used for lookup and update in this project.
         System.Console.Write("\nEnter Email of the record to edit: ");
-        var email = System.Console.ReadLine() ?? string.Empty;
+        string email = System.Console.ReadLine() ?? string.Empty;
 
         // Preload the record so the UI can show current values.
-        var existing = _controller.FindByEmail(email);
+        Person existing = _controller.FindByEmail(email);
         if (existing == null)
         {
             System.Console.WriteLine("Record not found.");
@@ -249,9 +250,9 @@ public sealed class ConsoleMenuView
         // Existing record is used only for displaying current values.
         System.Console.WriteLine("Leave blank to keep current value.");
         System.Console.Write($"Name ({existing.Name}): ");
-        var name = System.Console.ReadLine() ?? string.Empty;
+        string name = System.Console.ReadLine() ?? string.Empty;
         System.Console.Write($"Telephone ({existing.Telephone}): ");
-        var telephone = System.Console.ReadLine() ?? string.Empty;
+        string telephone = System.Console.ReadLine() ?? string.Empty;
 
         // Group-specific input variables
         string subject1 = "";
@@ -262,8 +263,9 @@ public sealed class ConsoleMenuView
         int? hours = null;
 
         // Only prompt for fields that match the existing runtime type.
-        if (existing is Student s)
+        if (existing is Student)
         {
+            Student s = (Student)existing;
             // Student update supports changing any of the three subjects.
             System.Console.Write($"Subject1 ({s.Subject1}): ");
             subject1 = System.Console.ReadLine() ?? string.Empty;
@@ -272,8 +274,9 @@ public sealed class ConsoleMenuView
             System.Console.Write($"Subject3 ({s.Subject3}): ");
             subject3 = System.Console.ReadLine() ?? string.Empty;
         }
-        else if (existing is Teacher t)
+        else if (existing is Teacher)
         {
+            Teacher t = (Teacher)existing;
             // Teacher update supports salary and two subjects.
             salary = ReadDecimalNullable($"Salary ({t.Salary})");
             System.Console.Write($"Subject1 ({t.Subject1}): ");
@@ -281,8 +284,9 @@ public sealed class ConsoleMenuView
             System.Console.Write($"Subject2 ({t.Subject2}): ");
             subject2 = System.Console.ReadLine() ?? string.Empty;
         }
-        else if (existing is Admin a)
+        else if (existing is Admin)
         {
+            Admin a = (Admin)existing;
             // Admin update supports salary, job type, and working hours.
             salary = ReadDecimalNullable($"Salary ({a.Salary})");
             System.Console.Write($"FullTimeOrPartTime ({a.FullTimeOrPartTime}): ");
@@ -291,7 +295,7 @@ public sealed class ConsoleMenuView
         }
 
         // Update request supports optional fields (nullable / blank means no change).
-        var request = UpdatePersonRequest.Create(
+        UpdatePersonRequest request = UpdatePersonRequest.Create(
             targetEmail: email,
             name: name,
             telephone: telephone,
@@ -304,7 +308,7 @@ public sealed class ConsoleMenuView
         );
 
         // Controller updates only the fields provided in the request.
-        var result = _controller.Edit(request);
+        OperationResult result = _controller.Edit(request);
         System.Console.WriteLine(result.Success ? "Updated successfully." : result.Error);
     }
 
@@ -315,8 +319,8 @@ public sealed class ConsoleMenuView
     {
         // Deletion is delegated to the controller to ensure consistent validation and error messages.
         System.Console.Write("\nEnter Email of the record to delete: ");
-        var email = System.Console.ReadLine() ?? string.Empty;
-        var result = _controller.Delete(email);
+        string email = System.Console.ReadLine() ?? string.Empty;
+        OperationResult result = _controller.Delete(email);
         System.Console.WriteLine(result.Success ? "Deleted successfully." : result.Error);
     }
 
@@ -330,8 +334,9 @@ public sealed class ConsoleMenuView
         while (true)
         {
             System.Console.Write($"{label}: ");
-            var text = System.Console.ReadLine();
-            if (int.TryParse(text, out var value)) return value;
+            string text = System.Console.ReadLine();
+            int value;
+            if (int.TryParse(text, out value)) return value;
             // Invalid input: repeat prompt until user enters a valid integer.
             System.Console.WriteLine("Invalid number.");
         }
@@ -347,9 +352,10 @@ public sealed class ConsoleMenuView
         while (true)
         {
             System.Console.Write($"{label}: ");
-            var text = System.Console.ReadLine() ?? string.Empty;
+            string text = System.Console.ReadLine() ?? string.Empty;
             if (string.IsNullOrWhiteSpace(text)) return null;
-            if (int.TryParse(text, out var value)) return value;
+            int value;
+            if (int.TryParse(text, out value)) return value;
             // Invalid input: repeat prompt until user enters a valid integer or blank.
             System.Console.WriteLine("Invalid number.");
         }
@@ -365,8 +371,9 @@ public sealed class ConsoleMenuView
         while (true)
         {
             System.Console.Write($"{label}: ");
-            var text = System.Console.ReadLine();
-            if (decimal.TryParse(text, out var value)) return value;
+            string text = System.Console.ReadLine();
+            decimal value;
+            if (decimal.TryParse(text, out value)) return value;
             // Invalid input: repeat prompt until user enters a valid decimal.
             System.Console.WriteLine("Invalid number.");
         }
@@ -382,9 +389,10 @@ public sealed class ConsoleMenuView
         while (true)
         {
             System.Console.Write($"{label}: ");
-            var text = System.Console.ReadLine() ?? string.Empty;
+            string text = System.Console.ReadLine() ?? string.Empty;
             if (string.IsNullOrWhiteSpace(text)) return null;
-            if (decimal.TryParse(text, out var value)) return value;
+            decimal value;
+            if (decimal.TryParse(text, out value)) return value;
             // Invalid input: repeat prompt until user enters a valid decimal or blank.
             System.Console.WriteLine("Invalid number.");
         }

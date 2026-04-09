@@ -6,7 +6,7 @@ namespace EducationCentreSystem.Models
     /// Represents a Teacher entity within the education centre.
     /// This class extends the Person base class and includes teacher-specific data such as salary and subjects taught.
     /// </summary>
-    public sealed class Teacher : Person
+    public class Teacher : Person
     {
         /// <summary>
         /// Gets or sets the salary for the teaching staff.

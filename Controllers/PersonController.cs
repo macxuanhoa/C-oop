@@ -12,12 +12,12 @@ namespace EducationCentreSystem.Controllers
     /// This controller orchestrates business logic, input validation, and object mapping.
     /// It demonstrates the use of Dependency Injection via the IPersonRepository interface.
     /// </summary>
-    public sealed class PersonController
+    public class PersonController
     {
         /// <summary>
         /// The repository used for persisting and retrieving person records.
         /// </summary>
-        private readonly IPersonRepository repository;
+        private IPersonRepository repository;
 
         /// <summary>
         /// Initializes a new instance of the PersonController class with a specific repository implementation.
@@ -32,7 +32,7 @@ namespace EducationCentreSystem.Controllers
         /// Fetches all people currently stored in the system.
         /// </summary>
         /// <returns>A read-only collection of all Person entities.</returns>
-        public IReadOnlyList<Person> ViewAll()
+        public List<Person> ViewAll()
         {
             return repository.GetAll();
         }
@@ -42,7 +42,7 @@ namespace EducationCentreSystem.Controllers
         /// </summary>
         /// <param name="role">The role to filter by.</param>
         /// <returns>A read-only collection of people with the specified role.</returns>
-        public IReadOnlyList<Person> ViewByRole(PersonRole role)
+        public List<Person> ViewByRole(PersonRole role)
         {
             return repository.GetByRole(role);
         }
@@ -64,7 +64,7 @@ namespace EducationCentreSystem.Controllers
 
         /// <summary>
         /// Validates and adds a new person record to the system.
-        /// This method demonstrates the use of a Factory pattern for object creation.
+        /// This method demonstrates the use of a Factory pattern for object creation.  
         /// </summary>
         /// <param name="request">The data containing the new person's details.</param>
         /// <returns>An OperationResult containing the created Person or error details.</returns>
@@ -80,7 +80,7 @@ namespace EducationCentreSystem.Controllers
             if (validationErrors.Count > 0)
             {
                 string combinedErrorMessage = "";
-                foreach (var error in validationErrors)
+                foreach (KeyValuePair<string, string> error in validationErrors)
                 {
                     combinedErrorMessage = combinedErrorMessage + error.Value + " ";
                 }

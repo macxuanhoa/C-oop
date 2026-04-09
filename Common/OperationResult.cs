@@ -4,7 +4,7 @@ namespace EducationCentreSystem.Common;
 /// Represents the outcome of an operation without a return value.
 /// Used to communicate success/failure and an error message to the UI layer.
 /// </summary>
-public sealed class OperationResult
+public class OperationResult
 {
     /// <summary>
     /// True when the operation succeeded.
@@ -42,7 +42,7 @@ public sealed class OperationResult
 /// <summary>
 /// Represents the outcome of an operation that returns data.
 /// </summary>
-public sealed class OperationResult<T>
+public class OperationResult<T>
 {
     /// <summary>
     /// True when the operation succeeded.

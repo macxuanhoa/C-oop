@@ -7,7 +7,7 @@ namespace EducationCentreSystem.Models
     /// Represents an Administrative staff entity within the education centre.
     /// This class extends the Person base class and includes administrative-specific data such as salary, employment type, and working hours.
     /// </summary>
-    public sealed class Admin : Person
+    public class Admin : Person
     {
         /// <summary>
         /// Gets or sets the salary for the administrative staff.

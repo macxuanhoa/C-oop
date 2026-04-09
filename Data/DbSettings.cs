@@ -22,7 +22,7 @@ public static class DbSettings
     /// </summary>
     public static string? TryGetConnectionString()
     {
-        var value = Environment.GetEnvironmentVariable(ConnectionEnvVar);
+        string? value = Environment.GetEnvironmentVariable(ConnectionEnvVar);
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 }

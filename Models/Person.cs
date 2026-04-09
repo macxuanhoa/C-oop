@@ -63,7 +63,7 @@ namespace EducationCentreSystem.Models
         
         public virtual void MapFromCreateRequest(CreatePersonRequest request)
         {
-            ArgumentNullException.ThrowIfNull(request);
+            if (request == null) throw new ArgumentNullException("request");
 
             this.Name = request.Name.Trim();
             this.Email = ValidationHelper.NormalizeEmail(request.Email)!;
@@ -77,7 +77,7 @@ namespace EducationCentreSystem.Models
         /// <param name="request">The data transfer object containing update details.</param>
         public virtual void MapFromUpdateRequest(UpdatePersonRequest request)
         {
-            ArgumentNullException.ThrowIfNull(request);
+            if (request == null) throw new ArgumentNullException("request");
 
             if (string.IsNullOrWhiteSpace(request.Name) == false)
             {

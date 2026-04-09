@@ -10,12 +10,12 @@ namespace EducationCentreSystem.Repositories
     /// This is ideal for development and testing as it does not require an external database.
     /// Data is stored in a private List and is cleared when the application terminates.
     /// </summary>
-    public sealed class InMemoryPersonRepository : IPersonRepository
+    public class InMemoryPersonRepository : IPersonRepository
     {
         /// <summary>
         /// Internal collection of all people records (Students, Teachers, and Admins).
         /// </summary>
-        private readonly List<Person> peopleList = new List<Person>();
+        private List<Person> peopleList = new List<Person>();
 
         /// <summary>
         /// Tracks the next available ID to ensure unique primary keys for new records.
@@ -26,7 +26,7 @@ namespace EducationCentreSystem.Repositories
         /// Retrieves a copy of all person records stored in memory.
         /// </summary>
         /// <returns>A read-only list containing all people.</returns>
-        public IReadOnlyList<Person> GetAll()
+        public List<Person> GetAll()
         {
             List<Person> snapshot = new List<Person>();
             foreach (Person p in peopleList)
@@ -41,7 +41,7 @@ namespace EducationCentreSystem.Repositories
         /// </summary>
         /// <param name="role">The role to filter by (e.g., Student, Teacher, Admin).</param>
         /// <returns>A read-only list of people matching the specified role.</returns>
-        public IReadOnlyList<Person> GetByRole(PersonRole role)
+        public List<Person> GetByRole(PersonRole role)
         {
             List<Person> filteredResults = new List<Person>();
             for (int i = 0; i < peopleList.Count; i++)
