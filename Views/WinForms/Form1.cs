@@ -47,7 +47,7 @@ namespace EducationCentreSystem.Views.WinForms
         /// Initializes the form and loads initial data into the grid.
         /// </summary>
         public Form1()
-            : this(new PersonController(new InMemoryPersonRepository()))
+            : this(new PersonController(new MySqlPersonRepository("Server=localhost;Database=oop_edu;User=root;Password=;")))
         {
         }
 
