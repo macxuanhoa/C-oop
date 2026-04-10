@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using EducationCentreSystem.Controllers;
 using EducationCentreSystem.Models;
 using EducationCentreSystem.Common;
+using EducationCentreSystem.Data;
 using EducationCentreSystem.Repositories;
 
 namespace EducationCentreSystem.Views.WinForms
@@ -44,10 +45,11 @@ namespace EducationCentreSystem.Views.WinForms
         private string _editTargetEmail = string.Empty;
 
         /// <summary>
-        /// Initializes the form and loads initial data into the grid.
+        /// Parameterless constructor for WinForms designer compatibility.
+        /// Uses the centralized DbSettings configuration — no hard-coded connection string.
         /// </summary>
         public Form1()
-            : this(new PersonController(new MySqlPersonRepository("Server=localhost;Database=oop_edu;User=root;Password=;")))
+            : this(new PersonController(new MySqlPersonRepository(DbSettings.GetConnectionString())))
         {
         }
 

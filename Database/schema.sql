@@ -1,8 +1,8 @@
-CREATE DATABASE IF NOT EXISTS education_centre
+CREATE DATABASE IF NOT EXISTS oop_edu
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
-USE education_centre;
+USE oop_edu;
 
 CREATE TABLE IF NOT EXISTS People (
   PersonId INT NOT NULL AUTO_INCREMENT,

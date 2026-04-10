@@ -4,6 +4,7 @@ using EducationCentreSystem.Controllers;
 using EducationCentreSystem.Data;
 using EducationCentreSystem.Repositories;
 using EducationCentreSystem.Views.WinForms;
+using MySqlConnector;
 
 namespace EducationCentreSystem
 {
@@ -12,17 +13,60 @@ namespace EducationCentreSystem
         [STAThread]
         private static void Main()
         {
-            // Set the connection string directly or via environment variable.
-            string connectionString = DbSettings.TryGetConnectionString();
-            if (string.IsNullOrEmpty(connectionString))
+            // ── Step 1: Resolve and log the connection string ────────────────
+            // DbSettings checks ENV var first, then appsettings.json.
+            // If neither is configured, it throws with a clear diagnostic message.
+            string connectionString;
+            try
             {
-                // Fallback connection string if env var is not set.
-                connectionString = "Server=localhost;Database=oop_edu;User=root;Password=;";
+                connectionString = DbSettings.GetConnectionString();
+                DbSettings.LogStartupDiagnostics();
             }
-            
-            IPersonRepository repo = new MySqlPersonRepository(connectionString);
+            catch (InvalidOperationException ex)
+            {
+                MessageBox.Show(
+                    ex.Message,
+                    "Configuration Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
 
-            // Controller encapsulates all CRUD operations.
+            // ── Step 2: Validate database connectivity ───────────────────────
+            // Attempt a real connection before wiring up the rest of the app.
+            // This catches wrong credentials, missing DB, or MySQL not running.
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(connectionString))
+                {
+                    conn.Open();
+                    Console.WriteLine($"[Startup] Connection test PASSED — server version: {conn.ServerVersion}");
+                }
+            }
+            catch (MySqlException ex)
+            {
+                string dbName = DbSettings.GetDatabaseName();
+                string source = DbSettings.GetSource() == DbSettings.ConfigSource.EnvironmentVariable
+                    ? $"Environment variable ({DbSettings.ConnectionEnvVar})"
+                    : "appsettings.json";
+
+                MessageBox.Show(
+                    $"Could not connect to the MySQL database.\n\n" +
+                    $"Database : {dbName}\n" +
+                    $"Source   : {source}\n\n" +
+                    $"Possible causes:\n" +
+                    $"• MySQL server is not running (start XAMPP/WAMP)\n" +
+                    $"• Database '{dbName}' does not exist in phpMyAdmin\n" +
+                    $"• Incorrect username or password\n\n" +
+                    $"Technical details:\n{ex.Message}",
+                    "Database Connection Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
+            // ── Step 3: Wire up repository, controller, and seed data ────────
+            IPersonRepository repo = new MySqlPersonRepository(connectionString);
             PersonController controller = new PersonController(repo);
 
             try
@@ -32,11 +76,15 @@ namespace EducationCentreSystem
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Could not connect to the MySQL database. Please ensure your database is running and check the connection string.\n\n" + ex.Message, "Database Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(
+                    "Database is reachable but data seeding failed.\n\n" + ex.Message,
+                    "Seeding Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
                 return;
             }
 
-            // WinForms UI
+            // ── Step 4: Launch WinForms UI ───────────────────────────────────
             ApplicationConfiguration.Initialize();
             Application.Run(new Form1(controller));
         }
