@@ -129,7 +129,7 @@ namespace EducationCentreSystem.Views.WinForms
             dgvPersons.AutoGenerateColumns = false;
             
             // Common columns shared by all roles.
-            dgvPersons.Columns.Add(new DataGridViewTextBoxColumn { Name = "STT", HeaderText = "STT", FillWeight = 30, SortMode = DataGridViewColumnSortMode.NotSortable });
+            dgvPersons.Columns.Add(new DataGridViewTextBoxColumn { Name = "No", HeaderText = "No.", FillWeight = 30, SortMode = DataGridViewColumnSortMode.NotSortable });
             dgvPersons.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Role", HeaderText = "Role", FillWeight = 50, SortMode = DataGridViewColumnSortMode.NotSortable });
             dgvPersons.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Name", HeaderText = "Name", FillWeight = 100, SortMode = DataGridViewColumnSortMode.NotSortable });
             dgvPersons.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Email", HeaderText = "Email", FillWeight = 120, SortMode = DataGridViewColumnSortMode.NotSortable });
@@ -228,8 +228,8 @@ namespace EducationCentreSystem.Views.WinForms
         {
             if (e.RowIndex < 0) return;
 
-            // Generate dynamic sequence numbers (STT) for the unbound STT column
-            if (dgvPersons.Columns[e.ColumnIndex].Name == "STT")
+            // Generate dynamic sequence numbers (No.) for the unbound column
+            if (dgvPersons.Columns[e.ColumnIndex].Name == "No")
             {
                 e.Value = (e.RowIndex + 1).ToString();
                 e.FormattingApplied = true;
