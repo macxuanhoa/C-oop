@@ -91,7 +91,7 @@ namespace EducationCentreSystem.Views.WinForms
             this.dgvPersons.AllowUserToAddRows = false;
             this.dgvPersons.AllowUserToDeleteRows = false;
             this.dgvPersons.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dgvPersons.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvPersons.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             this.dgvPersons.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvPersons.Location = new System.Drawing.Point(3, 38);
             this.dgvPersons.Name = "dgvPersons";
@@ -123,9 +123,9 @@ namespace EducationCentreSystem.Views.WinForms
             // 
             // btnAdd
             // 
-            this.btnAdd.Location = new System.Drawing.Point(3, 3);
+            this.btnAdd.Location = new System.Drawing.Point(3, 5);
             this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(100, 30);
+            this.btnAdd.Size = new System.Drawing.Size(110, 36);
             this.btnAdd.TabIndex = 0;
             this.btnAdd.Text = "&Add New";
             this.btnAdd.UseVisualStyleBackColor = true;
@@ -133,9 +133,9 @@ namespace EducationCentreSystem.Views.WinForms
             // 
             // btnEdit
             // 
-            this.btnEdit.Location = new System.Drawing.Point(109, 3);
+            this.btnEdit.Location = new System.Drawing.Point(119, 5);
             this.btnEdit.Name = "btnEdit";
-            this.btnEdit.Size = new System.Drawing.Size(100, 30);
+            this.btnEdit.Size = new System.Drawing.Size(110, 36);
             this.btnEdit.TabIndex = 1;
             this.btnEdit.Text = "&Edit Selected";
             this.btnEdit.UseVisualStyleBackColor = true;
@@ -143,9 +143,9 @@ namespace EducationCentreSystem.Views.WinForms
             // 
             // btnDelete
             // 
-            this.btnDelete.Location = new System.Drawing.Point(215, 3);
+            this.btnDelete.Location = new System.Drawing.Point(235, 5);
             this.btnDelete.Name = "btnDelete";
-            this.btnDelete.Size = new System.Drawing.Size(100, 30);
+            this.btnDelete.Size = new System.Drawing.Size(110, 36);
             this.btnDelete.TabIndex = 2;
             this.btnDelete.Text = "&Delete";
             this.btnDelete.UseVisualStyleBackColor = true;
@@ -188,7 +188,7 @@ namespace EducationCentreSystem.Views.WinForms
             this.pnlRole.Controls.Add(this.cmbRole);
             this.pnlRole.Location = new System.Drawing.Point(3, 3);
             this.pnlRole.Name = "pnlRole";
-            this.pnlRole.Size = new System.Drawing.Size(260, 40);
+            this.pnlRole.Size = new System.Drawing.Size(280, 40);
             this.pnlRole.TabIndex = 0;
             // 
             // lblRole
@@ -204,9 +204,9 @@ namespace EducationCentreSystem.Views.WinForms
             // 
             this.cmbRole.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbRole.FormattingEnabled = true;
-            this.cmbRole.Location = new System.Drawing.Point(85, 10);
+            this.cmbRole.Location = new System.Drawing.Point(95, 10);
             this.cmbRole.Name = "cmbRole";
-            this.cmbRole.Size = new System.Drawing.Size(150, 23);
+            this.cmbRole.Size = new System.Drawing.Size(170, 23);
             this.cmbRole.TabIndex = 1;
             this.cmbRole.SelectedIndexChanged += new System.EventHandler(this.cmbRole_SelectedIndexChanged);
             // 
@@ -214,9 +214,9 @@ namespace EducationCentreSystem.Views.WinForms
             // 
             this.pnlName.Controls.Add(this.lblName);
             this.pnlName.Controls.Add(this.txtName);
-            this.pnlName.Location = new System.Drawing.Point(269, 3);
+            this.pnlName.Location = new System.Drawing.Point(289, 3);
             this.pnlName.Name = "pnlName";
-            this.pnlName.Size = new System.Drawing.Size(260, 40);
+            this.pnlName.Size = new System.Drawing.Size(280, 40);
             this.pnlName.TabIndex = 1;
             // 
             // lblName
@@ -230,18 +230,18 @@ namespace EducationCentreSystem.Views.WinForms
             // 
             // txtName
             // 
-            this.txtName.Location = new System.Drawing.Point(85, 10);
+            this.txtName.Location = new System.Drawing.Point(95, 10);
             this.txtName.Name = "txtName";
-            this.txtName.Size = new System.Drawing.Size(150, 23);
+            this.txtName.Size = new System.Drawing.Size(170, 23);
             this.txtName.TabIndex = 1;
             // 
             // pnlEmail
             // 
             this.pnlEmail.Controls.Add(this.lblEmail);
             this.pnlEmail.Controls.Add(this.txtEmail);
-            this.pnlEmail.Location = new System.Drawing.Point(535, 3);
+            this.pnlEmail.Location = new System.Drawing.Point(575, 3);
             this.pnlEmail.Name = "pnlEmail";
-            this.pnlEmail.Size = new System.Drawing.Size(260, 40);
+            this.pnlEmail.Size = new System.Drawing.Size(280, 40);
             this.pnlEmail.TabIndex = 2;
             // 
             // lblEmail
@@ -255,9 +255,9 @@ namespace EducationCentreSystem.Views.WinForms
             // 
             // txtEmail
             // 
-            this.txtEmail.Location = new System.Drawing.Point(85, 10);
+            this.txtEmail.Location = new System.Drawing.Point(95, 10);
             this.txtEmail.Name = "txtEmail";
-            this.txtEmail.Size = new System.Drawing.Size(150, 23);
+            this.txtEmail.Size = new System.Drawing.Size(170, 23);
             this.txtEmail.TabIndex = 1;
             // 
             // pnlTelephone
@@ -266,7 +266,7 @@ namespace EducationCentreSystem.Views.WinForms
             this.pnlTelephone.Controls.Add(this.txtTelephone);
             this.pnlTelephone.Location = new System.Drawing.Point(3, 49);
             this.pnlTelephone.Name = "pnlTelephone";
-            this.pnlTelephone.Size = new System.Drawing.Size(260, 40);
+            this.pnlTelephone.Size = new System.Drawing.Size(280, 40);
             this.pnlTelephone.TabIndex = 3;
             // 
             // lblTelephone
@@ -280,9 +280,9 @@ namespace EducationCentreSystem.Views.WinForms
             // 
             // txtTelephone
             // 
-            this.txtTelephone.Location = new System.Drawing.Point(85, 10);
+            this.txtTelephone.Location = new System.Drawing.Point(95, 10);
             this.txtTelephone.Name = "txtTelephone";
-            this.txtTelephone.Size = new System.Drawing.Size(150, 23);
+            this.txtTelephone.Size = new System.Drawing.Size(170, 23);
             this.txtTelephone.TabIndex = 1;
             // 
             // pnlSubject1
@@ -291,7 +291,7 @@ namespace EducationCentreSystem.Views.WinForms
             this.pnlSubject1.Controls.Add(this.txtSubject1);
             this.pnlSubject1.Location = new System.Drawing.Point(269, 49);
             this.pnlSubject1.Name = "pnlSubject1";
-            this.pnlSubject1.Size = new System.Drawing.Size(260, 40);
+            this.pnlSubject1.Size = new System.Drawing.Size(280, 40);
             this.pnlSubject1.TabIndex = 4;
             // 
             // lblSubject1
@@ -305,9 +305,9 @@ namespace EducationCentreSystem.Views.WinForms
             // 
             // txtSubject1
             // 
-            this.txtSubject1.Location = new System.Drawing.Point(85, 10);
+            this.txtSubject1.Location = new System.Drawing.Point(95, 10);
             this.txtSubject1.Name = "txtSubject1";
-            this.txtSubject1.Size = new System.Drawing.Size(150, 23);
+            this.txtSubject1.Size = new System.Drawing.Size(170, 23);
             this.txtSubject1.TabIndex = 1;
             // 
             // pnlSubject2
@@ -316,7 +316,7 @@ namespace EducationCentreSystem.Views.WinForms
             this.pnlSubject2.Controls.Add(this.txtSubject2);
             this.pnlSubject2.Location = new System.Drawing.Point(535, 49);
             this.pnlSubject2.Name = "pnlSubject2";
-            this.pnlSubject2.Size = new System.Drawing.Size(260, 40);
+            this.pnlSubject2.Size = new System.Drawing.Size(280, 40);
             this.pnlSubject2.TabIndex = 5;
             // 
             // lblSubject2
@@ -330,9 +330,9 @@ namespace EducationCentreSystem.Views.WinForms
             // 
             // txtSubject2
             // 
-            this.txtSubject2.Location = new System.Drawing.Point(85, 10);
+            this.txtSubject2.Location = new System.Drawing.Point(95, 10);
             this.txtSubject2.Name = "txtSubject2";
-            this.txtSubject2.Size = new System.Drawing.Size(150, 23);
+            this.txtSubject2.Size = new System.Drawing.Size(170, 23);
             this.txtSubject2.TabIndex = 1;
             // 
             // pnlSubject3
@@ -341,7 +341,7 @@ namespace EducationCentreSystem.Views.WinForms
             this.pnlSubject3.Controls.Add(this.txtSubject3);
             this.pnlSubject3.Location = new System.Drawing.Point(3, 95);
             this.pnlSubject3.Name = "pnlSubject3";
-            this.pnlSubject3.Size = new System.Drawing.Size(260, 40);
+            this.pnlSubject3.Size = new System.Drawing.Size(280, 40);
             this.pnlSubject3.TabIndex = 6;
             // 
             // lblSubject3
@@ -355,9 +355,9 @@ namespace EducationCentreSystem.Views.WinForms
             // 
             // txtSubject3
             // 
-            this.txtSubject3.Location = new System.Drawing.Point(85, 10);
+            this.txtSubject3.Location = new System.Drawing.Point(95, 10);
             this.txtSubject3.Name = "txtSubject3";
-            this.txtSubject3.Size = new System.Drawing.Size(150, 23);
+            this.txtSubject3.Size = new System.Drawing.Size(170, 23);
             this.txtSubject3.TabIndex = 1;
             // 
             // pnlSalary
@@ -366,7 +366,7 @@ namespace EducationCentreSystem.Views.WinForms
             this.pnlSalary.Controls.Add(this.txtSalary);
             this.pnlSalary.Location = new System.Drawing.Point(269, 95);
             this.pnlSalary.Name = "pnlSalary";
-            this.pnlSalary.Size = new System.Drawing.Size(260, 40);
+            this.pnlSalary.Size = new System.Drawing.Size(280, 40);
             this.pnlSalary.TabIndex = 7;
             // 
             // lblSalary
@@ -380,9 +380,9 @@ namespace EducationCentreSystem.Views.WinForms
             // 
             // txtSalary
             // 
-            this.txtSalary.Location = new System.Drawing.Point(85, 10);
+            this.txtSalary.Location = new System.Drawing.Point(95, 10);
             this.txtSalary.Name = "txtSalary";
-            this.txtSalary.Size = new System.Drawing.Size(150, 23);
+            this.txtSalary.Size = new System.Drawing.Size(170, 23);
             this.txtSalary.TabIndex = 1;
             // 
             // pnlJobType
@@ -391,7 +391,7 @@ namespace EducationCentreSystem.Views.WinForms
             this.pnlJobType.Controls.Add(this.cmbJobType);
             this.pnlJobType.Location = new System.Drawing.Point(535, 95);
             this.pnlJobType.Name = "pnlJobType";
-            this.pnlJobType.Size = new System.Drawing.Size(260, 40);
+            this.pnlJobType.Size = new System.Drawing.Size(280, 40);
             this.pnlJobType.TabIndex = 8;
             // 
             // lblJobType
@@ -407,9 +407,9 @@ namespace EducationCentreSystem.Views.WinForms
             // 
             this.cmbJobType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbJobType.FormattingEnabled = true;
-            this.cmbJobType.Location = new System.Drawing.Point(85, 10);
+            this.cmbJobType.Location = new System.Drawing.Point(95, 10);
             this.cmbJobType.Name = "cmbJobType";
-            this.cmbJobType.Size = new System.Drawing.Size(150, 23);
+            this.cmbJobType.Size = new System.Drawing.Size(170, 23);
             this.cmbJobType.TabIndex = 1;
             // 
             // pnlWorkingHours
@@ -418,7 +418,7 @@ namespace EducationCentreSystem.Views.WinForms
             this.pnlWorkingHours.Controls.Add(this.numWorkingHours);
             this.pnlWorkingHours.Location = new System.Drawing.Point(3, 141);
             this.pnlWorkingHours.Name = "pnlWorkingHours";
-            this.pnlWorkingHours.Size = new System.Drawing.Size(260, 40);
+            this.pnlWorkingHours.Size = new System.Drawing.Size(280, 40);
             this.pnlWorkingHours.TabIndex = 9;
             // 
             // lblWorkingHours
@@ -432,14 +432,14 @@ namespace EducationCentreSystem.Views.WinForms
             // 
             // numWorkingHours
             // 
-            this.numWorkingHours.Location = new System.Drawing.Point(85, 11);
+            this.numWorkingHours.Location = new System.Drawing.Point(95, 11);
             this.numWorkingHours.Maximum = new decimal(new int[] {
             168,
             0,
             0,
             0});
             this.numWorkingHours.Name = "numWorkingHours";
-            this.numWorkingHours.Size = new System.Drawing.Size(150, 23);
+            this.numWorkingHours.Size = new System.Drawing.Size(170, 23);
             this.numWorkingHours.TabIndex = 1;
             // 
             // pnlActions
@@ -454,9 +454,9 @@ namespace EducationCentreSystem.Views.WinForms
             // 
             // btnSave
             // 
-            this.btnSave.Location = new System.Drawing.Point(336, 5);
+            this.btnSave.Location = new System.Drawing.Point(310, 3);
             this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(90, 30);
+            this.btnSave.Size = new System.Drawing.Size(120, 34);
             this.btnSave.TabIndex = 0;
             this.btnSave.Text = "&Save Changes";
             this.btnSave.UseVisualStyleBackColor = true;
@@ -464,9 +464,9 @@ namespace EducationCentreSystem.Views.WinForms
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(432, 5);
+            this.btnCancel.Location = new System.Drawing.Point(436, 3);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(90, 30);
+            this.btnCancel.Size = new System.Drawing.Size(100, 34);
             this.btnCancel.TabIndex = 1;
             this.btnCancel.Text = "&Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
@@ -488,11 +488,11 @@ namespace EducationCentreSystem.Views.WinForms
             this.tlpMain.Location = new System.Drawing.Point(0, 0);
             this.tlpMain.Name = "tlpMain";
             this.tlpMain.RowCount = 4;
-            this.tlpMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
+            this.tlpMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 45F));
             this.tlpMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tlpMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 38F));
+            this.tlpMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 50F));
             this.tlpMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 232F));
-            this.tlpMain.Size = new System.Drawing.Size(834, 601);
+            this.tlpMain.Size = new System.Drawing.Size(934, 641);
             this.tlpMain.TabIndex = 0;
             // 
             // pnlTop
@@ -506,7 +506,7 @@ namespace EducationCentreSystem.Views.WinForms
             this.pnlTop.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlTop.Location = new System.Drawing.Point(3, 3);
             this.pnlTop.Name = "pnlTop";
-            this.pnlTop.Size = new System.Drawing.Size(828, 29);
+            this.pnlTop.Size = new System.Drawing.Size(928, 39);
             this.pnlTop.TabIndex = 0;
             // 
             // cmbSearchBy
@@ -561,16 +561,16 @@ namespace EducationCentreSystem.Views.WinForms
             this.pnlMidActions.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlMidActions.Location = new System.Drawing.Point(3, 336);
             this.pnlMidActions.Name = "pnlMidActions";
-            this.pnlMidActions.Size = new System.Drawing.Size(828, 32);
+            this.pnlMidActions.Size = new System.Drawing.Size(928, 44);
             this.pnlMidActions.TabIndex = 2;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(834, 601);
+            this.ClientSize = new System.Drawing.Size(934, 641);
             this.Controls.Add(this.tlpMain);
-            this.MinimumSize = new System.Drawing.Size(850, 640);
+            this.MinimumSize = new System.Drawing.Size(950, 680);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Education Centre System - Advanced Management";

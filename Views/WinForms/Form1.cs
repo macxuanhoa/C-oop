@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Drawing;
 using System.Windows.Forms;
 using EducationCentreSystem.Controllers;
 using EducationCentreSystem.Models;
@@ -43,6 +44,36 @@ namespace EducationCentreSystem.Views.WinForms
         /// Email used to identify the record being edited (email is the unique key in this application).
         /// </summary>
         private string _editTargetEmail = string.Empty;
+
+        /// <summary>
+        /// Stores original button colors so they can be restored after dimming during edit/add mode.
+        /// </summary>
+        private readonly Dictionary<Button, Color> _originalButtonColors = new Dictionary<Button, Color>();
+
+        /// <summary>
+        /// Timer used to auto-hide the success notification after a delay.
+        /// </summary>
+        private System.Windows.Forms.Timer _toastTimer;
+
+        /// <summary>
+        /// Timer used for the toast fade-out animation.
+        /// </summary>
+        private System.Windows.Forms.Timer _toastFadeTimer;
+
+        /// <summary>
+        /// Panel container for the toast notification (supports rounded corners).
+        /// </summary>
+        private Panel _pnlToast;
+
+        /// <summary>
+        /// Label overlaid on the grid area to display success/feedback messages.
+        /// </summary>
+        private Label _lblToast;
+
+        /// <summary>
+        /// Label shown when the DataGridView has no records to display.
+        /// </summary>
+        private Label _lblEmptyState;
 
         /// <summary>
         /// Parameterless constructor for WinForms designer compatibility.
@@ -98,19 +129,95 @@ namespace EducationCentreSystem.Views.WinForms
             dgvPersons.AutoGenerateColumns = false;
             
             // Common columns shared by all roles.
-            dgvPersons.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Id", HeaderText = "ID", FillWeight = 30 });
-            dgvPersons.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Role", HeaderText = "Role", FillWeight = 50 });
-            dgvPersons.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Name", HeaderText = "Name", FillWeight = 100 });
-            dgvPersons.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Email", HeaderText = "Email", FillWeight = 120 });
-            dgvPersons.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Telephone", HeaderText = "Telephone", FillWeight = 80 });
+            dgvPersons.Columns.Add(new DataGridViewTextBoxColumn { Name = "STT", HeaderText = "STT", FillWeight = 30, SortMode = DataGridViewColumnSortMode.NotSortable });
+            dgvPersons.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Role", HeaderText = "Role", FillWeight = 50, SortMode = DataGridViewColumnSortMode.NotSortable });
+            dgvPersons.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Name", HeaderText = "Name", FillWeight = 100, SortMode = DataGridViewColumnSortMode.NotSortable });
+            dgvPersons.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Email", HeaderText = "Email", FillWeight = 120, SortMode = DataGridViewColumnSortMode.NotSortable });
+            dgvPersons.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Telephone", HeaderText = "Telephone", FillWeight = 80, SortMode = DataGridViewColumnSortMode.NotSortable });
             
             // This column is computed at runtime to show role-specific information in one place.
-            DataGridViewTextBoxColumn detailsCol = new DataGridViewTextBoxColumn { HeaderText = "Detailed Info", FillWeight = 200, Name = "DetailedInfo" };
+            DataGridViewTextBoxColumn detailsCol = new DataGridViewTextBoxColumn { HeaderText = "Detailed Info", FillWeight = 200, Name = "DetailedInfo", SortMode = DataGridViewColumnSortMode.NotSortable };
             dgvPersons.Columns.Add(detailsCol);
             
             // Remove previous handler to avoid duplicate attachments
             dgvPersons.CellFormatting -= DgvPersons_CellFormatting;
             dgvPersons.CellFormatting += DgvPersons_CellFormatting;
+            
+            // Visual Redesign
+            ApplyModernTheme();
+
+            // --- Success toast notification ---
+            _pnlToast = new Panel();
+            _pnlToast.Size = new Size(340, 44);
+            _pnlToast.BackColor = ColorTranslator.FromHtml("#2d3436");
+            _pnlToast.Visible = false;
+            // Rounded corners
+            var toastPath = new System.Drawing.Drawing2D.GraphicsPath();
+            int r = 22; // corner radius
+            toastPath.AddArc(0, 0, r, r, 180, 90);
+            toastPath.AddArc(_pnlToast.Width - r, 0, r, r, 270, 90);
+            toastPath.AddArc(_pnlToast.Width - r, _pnlToast.Height - r, r, r, 0, 90);
+            toastPath.AddArc(0, _pnlToast.Height - r, r, r, 90, 90);
+            toastPath.CloseFigure();
+            _pnlToast.Region = new Region(toastPath);
+
+            _lblToast = new Label();
+            _lblToast.AutoSize = false;
+            _lblToast.Dock = DockStyle.Fill;
+            _lblToast.TextAlign = ContentAlignment.MiddleCenter;
+            _lblToast.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            _lblToast.ForeColor = Color.White;
+            _lblToast.BackColor = Color.Transparent;
+            _pnlToast.Controls.Add(_lblToast);
+
+            // Add toast to the form itself (not the grid)
+            this.Controls.Add(_pnlToast);
+            _pnlToast.BringToFront();
+
+            // Display timer: how long the toast stays fully visible
+            _toastTimer = new System.Windows.Forms.Timer();
+            _toastTimer.Interval = 2500;
+            _toastTimer.Tick += (s, ev) =>
+            {
+                _toastTimer.Stop();
+                _toastFadeTimer.Start();
+            };
+
+            // Fade-out timer: gradually hides the toast
+            _toastFadeTimer = new System.Windows.Forms.Timer();
+            _toastFadeTimer.Interval = 30;
+            double _fadeOpacity = 1.0;
+            _toastFadeTimer.Tick += (s, ev) =>
+            {
+                _fadeOpacity -= 0.08;
+                if (_fadeOpacity <= 0)
+                {
+                    _toastFadeTimer.Stop();
+                    _pnlToast.Visible = false;
+                    _fadeOpacity = 1.0;
+                    _pnlToast.BackColor = ColorTranslator.FromHtml("#2d3436");
+                    _lblToast.ForeColor = Color.White;
+                }
+                else
+                {
+                    int alpha = (int)(255 * _fadeOpacity);
+                    _pnlToast.BackColor = Color.FromArgb(alpha, 45, 52, 54);
+                    _lblToast.ForeColor = Color.FromArgb(alpha, 255, 255, 255);
+                }
+            };
+
+            // --- Empty state overlay ---
+            _lblEmptyState = new Label();
+            _lblEmptyState.Text = "📋 No records found.\nUse \"Add New\" to create a record.";
+            _lblEmptyState.AutoSize = false;
+            _lblEmptyState.TextAlign = ContentAlignment.MiddleCenter;
+            _lblEmptyState.Font = new Font("Segoe UI", 12F, FontStyle.Italic);
+            _lblEmptyState.ForeColor = ColorTranslator.FromHtml("#b2bec3");
+            _lblEmptyState.BackColor = Color.White;
+            _lblEmptyState.Dock = DockStyle.Fill;
+            _lblEmptyState.Visible = false;
+            dgvPersons.Controls.Add(_lblEmptyState);
+
         }
 
         /// <summary>
@@ -119,8 +226,18 @@ namespace EducationCentreSystem.Views.WinForms
         /// </summary>
         private void DgvPersons_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
         {
+            if (e.RowIndex < 0) return;
+
+            // Generate dynamic sequence numbers (STT) for the unbound STT column
+            if (dgvPersons.Columns[e.ColumnIndex].Name == "STT")
+            {
+                e.Value = (e.RowIndex + 1).ToString();
+                e.FormattingApplied = true;
+                return;
+            }
+
             // Only handle formatting for the computed "DetailedInfo" column.
-            if (e.RowIndex >= 0 && dgvPersons.Columns[e.ColumnIndex].Name == "DetailedInfo")
+            if (dgvPersons.Columns[e.ColumnIndex].Name == "DetailedInfo")
             {
                 if (dgvPersons.Rows[e.RowIndex].DataBoundItem is Person)
                 {
@@ -220,9 +337,19 @@ namespace EducationCentreSystem.Views.WinForms
             List<Person> list = query.ToList();
             dgvPersons.DataSource = list;
 
-            if (list.Count == 0 && !string.IsNullOrEmpty(searchText))
+            if (_lblEmptyState != null)
             {
-                // Optional: You can handle UI feedback here if needed, but MessageBox on every keystroke is bad UX.
+                // Show/hide the empty state overlay based on list contents.
+                _lblEmptyState.Visible = list.Count == 0;
+
+                if (list.Count == 0 && !string.IsNullOrEmpty(searchText))
+                {
+                    _lblEmptyState.Text = "🔍 No results matching your search.";
+                }
+                else if (list.Count == 0)
+                {
+                    _lblEmptyState.Text = "📋 No records found.\nUse \"Add New\" to create a record.";
+                }
             }
         }
 
@@ -254,7 +381,7 @@ namespace EducationCentreSystem.Views.WinForms
         /// Toggles between view mode and edit/add mode.
         /// When editing/adding, the grid and navigation controls are disabled to prevent conflicting actions.
         /// </summary>
-        private void SetFormState(bool isEditingOrAdding)
+        private void SetFormState(bool isEditingOrAdding, Button? activeButton = null, string modeLabel = "")
         {
             // Details group becomes visible only when adding/editing.
             grpDetails.Visible = isEditingOrAdding;
@@ -267,11 +394,73 @@ namespace EducationCentreSystem.Views.WinForms
             btnDelete.Enabled = !isEditingOrAdding;
             cmbFilterRole.Enabled = !isEditingOrAdding;
             
-            if (!isEditingOrAdding)
+            if (isEditingOrAdding)
             {
+                // Update group box title to show current mode.
+                grpDetails.Text = modeLabel;
+
+                // Dim all action buttons and highlight the active one.
+                DimButton(btnAdd);
+                DimButton(btnEdit);
+                DimButton(btnDelete);
+                if (activeButton != null)
+                {
+                    HighlightActiveButton(activeButton);
+                }
+            }
+            else
+            {
+                // Restore group box title.
+                grpDetails.Text = "Person Information";
+
+                // Restore all button styles to original.
+                RestoreButton(btnAdd);
+                RestoreButton(btnEdit);
+                RestoreButton(btnDelete);
+
                 // When returning to view mode, clear form inputs and reset edit flags.
                 ClearForm();
             }
+        }
+
+        /// <summary>
+        /// Dims a button to indicate it is inactive/disabled during add or edit mode.
+        /// </summary>
+        private void DimButton(Button btn)
+        {
+            btn.BackColor = ColorTranslator.FromHtml("#dcdde1");
+            btn.ForeColor = ColorTranslator.FromHtml("#a4a4a4");
+            btn.FlatAppearance.BorderSize = 0;
+            btn.Cursor = Cursors.Default;
+        }
+
+        /// <summary>
+        /// Highlights the active button with a visible border to indicate the current mode.
+        /// </summary>
+        private void HighlightActiveButton(Button btn)
+        {
+            if (_originalButtonColors.ContainsKey(btn))
+            {
+                btn.BackColor = _originalButtonColors[btn];
+            }
+            btn.ForeColor = Color.White;
+            btn.FlatAppearance.BorderSize = 2;
+            btn.FlatAppearance.BorderColor = Color.White;
+            btn.Cursor = Cursors.Default;
+        }
+
+        /// <summary>
+        /// Restores a button's original color and style after leaving edit/add mode.
+        /// </summary>
+        private void RestoreButton(Button btn)
+        {
+            if (_originalButtonColors.ContainsKey(btn))
+            {
+                btn.BackColor = _originalButtonColors[btn];
+            }
+            btn.ForeColor = Color.White;
+            btn.FlatAppearance.BorderSize = 0;
+            btn.Cursor = Cursors.Hand;
         }
 
         /// <summary>
@@ -309,8 +498,8 @@ namespace EducationCentreSystem.Views.WinForms
         private void btnAdd_Click(object sender, EventArgs e)
         {
             // Add mode: show input panel and allow selecting role and entering email.
-            SetFormState(true);
             _isEditMode = false;
+            SetFormState(true, btnAdd, "➕ Adding New Person");
             cmbRole.SelectedIndex = 0;
             txtName.Focus();
             UpdateVisibility();
@@ -333,8 +522,8 @@ namespace EducationCentreSystem.Views.WinForms
             var person = dgvPersons.SelectedRows[0].DataBoundItem as Person;
             if (person == null) return;
 
-            SetFormState(true);
             _isEditMode = true;
+            SetFormState(true, btnEdit, $"✏️ Editing: {person.Name}");
             _editTargetEmail = person.Email;
             
             // Lock role and email so the identity and type of the record remain consistent during editing.
@@ -396,6 +585,7 @@ namespace EducationCentreSystem.Views.WinForms
                 {
                     // Refresh list after successful delete.
                     LoadData();
+                    ShowToast("🗑️ Record deleted successfully!");
                 }
                 else
                 {
@@ -459,6 +649,7 @@ namespace EducationCentreSystem.Views.WinForms
                     // Exit edit mode and refresh list.
                     SetFormState(false);
                     LoadData();
+                    ShowToast("✅ Record updated successfully!");
                 }
                 else
                 {
@@ -506,6 +697,7 @@ namespace EducationCentreSystem.Views.WinForms
                         // Exit add mode and refresh list.
                         SetFormState(false);
                         LoadData();
+                        ShowToast("✅ New record added successfully!");
                     }
                     else
                     {
@@ -599,5 +791,152 @@ namespace EducationCentreSystem.Views.WinForms
                 pnlWorkingHours.Visible = false;
             }
         }
+
+        // ==========================================
+        // VISUAL REDESIGN (THEMING)
+        // ==========================================
+
+        private void ApplyModernTheme()
+        {
+            // Background
+            this.BackColor = ColorTranslator.FromHtml("#f5f6fa");
+
+            // Define modern palette
+            var btnAddColor = ColorTranslator.FromHtml("#4cd137");
+            var btnEditColor = ColorTranslator.FromHtml("#00a8ff");
+            var btnDeleteColor = ColorTranslator.FromHtml("#e84118");
+            var btnSaveColor = ColorTranslator.FromHtml("#44bd32");
+            var btnCancelColor = ColorTranslator.FromHtml("#7f8fa6");
+
+            // Store original colors for restore after dim/highlight
+            _originalButtonColors[btnAdd] = btnAddColor;
+            _originalButtonColors[btnEdit] = btnEditColor;
+            _originalButtonColors[btnDelete] = btnDeleteColor;
+
+            // Apply to specific buttons
+            StyleButton(btnAdd, btnAddColor);
+            StyleButton(btnEdit, btnEditColor);
+            StyleButton(btnDelete, btnDeleteColor);
+            StyleButton(btnSave, btnSaveColor);
+            StyleButton(btnCancel, btnCancelColor);
+
+            // DataGridView Modern Look
+            dgvPersons.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvPersons.BackgroundColor = Color.White;
+            dgvPersons.BorderStyle = BorderStyle.None;
+            dgvPersons.RowHeadersVisible = false;
+
+            dgvPersons.EnableHeadersVisualStyles = false;
+            var darkHeaderColor = ColorTranslator.FromHtml("#2f3640");
+            dgvPersons.ColumnHeadersDefaultCellStyle.BackColor = darkHeaderColor;
+            dgvPersons.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            dgvPersons.ColumnHeadersDefaultCellStyle.SelectionBackColor = darkHeaderColor;
+            dgvPersons.ColumnHeadersDefaultCellStyle.SelectionForeColor = Color.White;
+            dgvPersons.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold);
+            dgvPersons.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
+            dgvPersons.ColumnHeadersHeight = 40;
+
+            dgvPersons.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            dgvPersons.GridColor = ColorTranslator.FromHtml("#dcdde1");
+            
+            dgvPersons.RowTemplate.Height = 35;
+            dgvPersons.DefaultCellStyle.SelectionBackColor = ColorTranslator.FromHtml("#74b9ff");
+            dgvPersons.DefaultCellStyle.SelectionForeColor = Color.White;
+            dgvPersons.DefaultCellStyle.Padding = new Padding(0, 5, 0, 5);
+            
+            dgvPersons.AlternatingRowsDefaultCellStyle.BackColor = ColorTranslator.FromHtml("#f1f2f6");
+
+            // Typography & Layout adjustments
+            grpDetails.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            flpInputs.Font = new Font("Segoe UI", 9F, FontStyle.Regular);
+
+            // Give layout more breathing room
+            flpInputs.Padding = new Padding(10, 5, 10, 5);
+            pnlMidActions.Padding = new Padding(5, 4, 0, 4);
+            pnlTop.Padding = new Padding(5, 8, 0, 0);
+
+            // Fix Button Sizes & Text Alignment
+            btnSave.Text = "Save Changes";
+            btnCancel.Text = "Cancel";
+            btnAdd.Text = "Add New";
+            btnEdit.Text = "Edit Selected";
+            btnDelete.Text = "Delete";
+
+            btnSave.Size = new Size(120, 34);
+            btnCancel.Size = new Size(100, 34);
+            btnAdd.Size = new Size(110, 36);
+            btnEdit.Size = new Size(110, 36);
+            btnDelete.Size = new Size(110, 36);
+
+            // Vertically center labels within each input panel
+            foreach (Control pnl in flpInputs.Controls)
+            {
+                if (pnl is Panel panel)
+                {
+                    foreach (Control c in panel.Controls)
+                    {
+                        if (c is Label lbl)
+                        {
+                            lbl.Top = (panel.Height - lbl.Height) / 2;
+                        }
+                    }
+                }
+            }
+
+            // Setup TextBoxes/Inputs to be Flat (FixedSingle)
+            foreach (Control pnl in flpInputs.Controls)
+            {
+                if (pnl is Panel panel)
+                {
+                    foreach (Control c in panel.Controls)
+                    {
+                        if (c is TextBox txt) txt.BorderStyle = BorderStyle.FixedSingle;
+                        if (c is ComboBox cmb) cmb.FlatStyle = FlatStyle.Flat;
+                        if (c is NumericUpDown num) num.BorderStyle = BorderStyle.FixedSingle;
+                    }
+                }
+            }
+        }
+
+        private void StyleButton(Button btn, Color backColor)
+        {
+            btn.FlatStyle = FlatStyle.Flat;
+            btn.FlatAppearance.BorderSize = 0;
+            btn.BackColor = backColor;
+            btn.ForeColor = Color.White;
+            btn.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            btn.Cursor = Cursors.Hand;
+            btn.TextAlign = ContentAlignment.MiddleCenter;
+        }
+
+        // ==========================================
+        // TOAST NOTIFICATION
+        // ==========================================
+
+        /// <summary>
+        /// Displays a temporary success notification overlaid on the grid.
+        /// Auto-hides after 3 seconds.
+        /// </summary>
+        private void ShowToast(string message)
+        {
+            _lblToast.Text = message;
+
+            // Reset appearance
+            _pnlToast.BackColor = ColorTranslator.FromHtml("#2d3436");
+            _lblToast.ForeColor = Color.White;
+
+            // Position at bottom-center of the form
+            _pnlToast.Left = (this.ClientSize.Width - _pnlToast.Width) / 2;
+            _pnlToast.Top = this.ClientSize.Height - _pnlToast.Height - 24;
+
+            _pnlToast.Visible = true;
+            _pnlToast.BringToFront();
+
+            _toastFadeTimer.Stop();
+            _toastTimer.Stop();
+            _toastTimer.Start();
+        }
+
+
     }
 }
