@@ -798,15 +798,15 @@ namespace EducationCentreSystem.Views.WinForms
 
         private void ApplyModernTheme()
         {
-            // Background
-            this.BackColor = ColorTranslator.FromHtml("#f5f6fa");
+            // Background — soft blue-grey base
+            this.BackColor = ColorTranslator.FromHtml("#eef1f5");
 
-            // Define modern palette
-            var btnAddColor = ColorTranslator.FromHtml("#4cd137");
-            var btnEditColor = ColorTranslator.FromHtml("#00a8ff");
-            var btnDeleteColor = ColorTranslator.FromHtml("#e84118");
-            var btnSaveColor = ColorTranslator.FromHtml("#44bd32");
-            var btnCancelColor = ColorTranslator.FromHtml("#7f8fa6");
+            // Define harmonious palette — muted, professional tones
+            var btnAddColor = ColorTranslator.FromHtml("#00b894");     // teal green
+            var btnEditColor = ColorTranslator.FromHtml("#0984e3");    // refined blue
+            var btnDeleteColor = ColorTranslator.FromHtml("#d63031");  // muted red
+            var btnSaveColor = ColorTranslator.FromHtml("#00b894");    // matches Add for consistency
+            var btnCancelColor = ColorTranslator.FromHtml("#636e72");  // neutral grey
 
             // Store original colors for restore after dim/highlight
             _originalButtonColors[btnAdd] = btnAddColor;
@@ -827,7 +827,7 @@ namespace EducationCentreSystem.Views.WinForms
             dgvPersons.RowHeadersVisible = false;
 
             dgvPersons.EnableHeadersVisualStyles = false;
-            var darkHeaderColor = ColorTranslator.FromHtml("#2f3640");
+            var darkHeaderColor = ColorTranslator.FromHtml("#1e272e");  // deep charcoal
             dgvPersons.ColumnHeadersDefaultCellStyle.BackColor = darkHeaderColor;
             dgvPersons.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
             dgvPersons.ColumnHeadersDefaultCellStyle.SelectionBackColor = darkHeaderColor;
@@ -837,14 +837,14 @@ namespace EducationCentreSystem.Views.WinForms
             dgvPersons.ColumnHeadersHeight = 40;
 
             dgvPersons.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            dgvPersons.GridColor = ColorTranslator.FromHtml("#dcdde1");
+            dgvPersons.GridColor = ColorTranslator.FromHtml("#dfe6e9");
             
             dgvPersons.RowTemplate.Height = 35;
-            dgvPersons.DefaultCellStyle.SelectionBackColor = ColorTranslator.FromHtml("#74b9ff");
-            dgvPersons.DefaultCellStyle.SelectionForeColor = Color.White;
+            dgvPersons.DefaultCellStyle.SelectionBackColor = ColorTranslator.FromHtml("#dfe6e9");  // soft grey-blue
+            dgvPersons.DefaultCellStyle.SelectionForeColor = ColorTranslator.FromHtml("#2d3436");  // dark text
             dgvPersons.DefaultCellStyle.Padding = new Padding(0, 5, 0, 5);
             
-            dgvPersons.AlternatingRowsDefaultCellStyle.BackColor = ColorTranslator.FromHtml("#f1f2f6");
+            dgvPersons.AlternatingRowsDefaultCellStyle.BackColor = ColorTranslator.FromHtml("#f8f9fa");
 
             // Typography & Layout adjustments
             grpDetails.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
